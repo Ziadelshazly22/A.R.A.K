@@ -1,0 +1,21 @@
+EOF
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+
+# Environments
+.env
+.venv/
+
+# Model files (weights) - too large for GitHub
+/models/
+
+# Data files - usually too large
+/data/
+
+# OS generated files
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+EOF
