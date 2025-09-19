@@ -1,21 +1,72 @@
-EOF
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Environments
 .env
 .venv/
+env/
+venv/
 
 # Model files (weights) - too large for GitHub
 /models/
+*.h5
+*.ckpt
 
 # Data files - usually too large
 /data/
+*.csv
+*.tsv
+*.json
+*.xml
 
 # OS generated files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
 
 # Jupyter Notebook
 .ipynb_checkpoints/
-EOF
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Test coverage reports
+.coverage
+coverage.xml
+*.lcov
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Node.js dependencies
+node_modules/
+
+# Python packaging
+*.egg-info/
+*.eggs/
+MANIFEST
+
+# Miscellaneous
+*.lock
+*.orig
+*.rej
+*.class
+*.jar
+*.war
+*.iml
