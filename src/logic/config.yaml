@@ -19,6 +19,8 @@ weights:
   person: 6              # another person detected
   book: 6                # book/paper detected when not allowed
   calculator: 6          # calculator detected when not allowed
+  notebook: 0            # laptop/notebook presence (0 to disable)
+  # monitor: 0             # external monitor/TV presence (0 to disable)
   gaze_off_per_sec: 1    # per-second weight once off-screen gaze exceeds threshold
   repetitive_head: 2     # repetitive head movement within window
 
@@ -32,3 +34,23 @@ gaze_duration_threshold: 2.5
 ## Repetitive head movement parameters
 repeat_dir_threshold: 2    # N same-direction turns within window
 repeat_window_sec: 10.0    # seconds window to evaluate repetition
+
+## Detector settings
+# Primary YOLO model (name or path), e.g., yolov11m.pt
+detector_primary: yolov11m.pt
+# Secondary custom YOLO weights path
+detector_secondary: models/model_bestV3.pt
+# Minimum confidence threshold passed to both models
+detector_conf: 0.4
+# Merge overlapping boxes from both models (IoU-based NMS)
+detector_merge_nms: true
+detector_nms_iou: 0.5
+
+## Merge strategy: 'nms' or 'wbf' (weighted box fusion)
+detector_merge_mode: wbf
+
+## Optional per-class confidence thresholds to keep detections
+# class_conf:
+#   phone: 0.55
+#   earphone: 0.5
+#   smartwatch: 0.5

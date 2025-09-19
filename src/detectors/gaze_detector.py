@@ -24,14 +24,15 @@ Notes
 - A small moving average buffer is used to stabilize noisy single-frame estimates.
 """
 from __future__ import annotations
-
-from collections import deque
-from typing import Dict, Optional
-
 import cv2
 import numpy as np
 import mediapipe as mp
-
+import cv2
+import numpy as np
+import mediapipe as mp
+from collections import deque
+from typing import Dict, Optional
+from mediapipe.python.solutions import face_mesh
 
 class GazeDetector:
 	# Landmark indices based on MediaPipe Face Mesh
@@ -52,7 +53,8 @@ class GazeDetector:
 		smoothing: int
 			Window size of the moving average for iris positions to reduce jitter.
 		"""
-		self.mp_face_mesh = mp.solutions.face_mesh
+
+		self.mp_face_mesh = face_mesh
 		self.face_mesh = self.mp_face_mesh.FaceMesh(
 			refine_landmarks=True,
 			max_num_faces=1,

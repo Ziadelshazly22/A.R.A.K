@@ -25,7 +25,7 @@ import csv
 import os
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 import pandas as pd
 import cv2
@@ -120,7 +120,7 @@ class EventLogger:
 		gaze: str,
 		suspicion_score: int,
 		is_alert: bool,
-		annotated_frame: Optional["cv2.Mat"] = None,
+		annotated_frame: Optional[Any] = None,
 	) -> None:
 		"""Append a row to the per-session CSV and optionally save a snapshot image.
 

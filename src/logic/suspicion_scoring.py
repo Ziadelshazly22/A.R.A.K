@@ -40,13 +40,26 @@ class ScoringConfig:
 		default_factory=lambda: {
 			"phone": 5,
 			"earphone": 4,
+			"smartwatch": 4,
 			"person": 5,  # another person
 			"book": 3,
 			"calculator": 3,
+			"notebook": 0,   # set >0 to penalize laptop/notebook presence
+			# "monitor": 0,    # set >0 to penalize external monitor/TV presence
 			"gaze_off_per_sec": 1,
 			"repetitive_head": 2,
 		}
 	)
+	# Detector settings (read from config.yaml, used by pipeline)
+	detector_primary: str = "yolov11m.pt"
+	detector_secondary: str = "models/model_bestV3.pt"
+	detector_conf: float = 0.4
+	detector_merge_nms: bool = True
+	detector_nms_iou: float = 0.5
+	# Merge mode: 'nms'(non-maximum suppression) or 'wbf' (weighted box fusion)
+	detector_merge_mode: str = "wbf"
+	# Per-class confidence thresholds (e.g., {"phone": 0.6, "earphone": 0.5})
+	class_conf: Dict[str, float] = field(default_factory=dict)
 	# Allowed items
 	allow_book: bool = False      # set True to ignore 'book' detections for scoring
 	allow_calculator: bool = False  # set True to ignore 'calculator' detections
@@ -118,12 +131,15 @@ def compute_suspicion(
 		elif name == "earphone":
 			score += config.weights.get("earphone", 4)
 			events.append("SUS_OBJECT:earphone")
+		elif name == "smartwatch":
+			score += config.weights.get("smartwatch", 4)
+			events.append("SUS_OBJECT:smartwatch")
 		elif name == "person":
 			# Another person in frame besides examinee
 			score += config.weights.get("person", 5)
 			events.append("SUS_OBJECT:person")
 
-	# Soft objects (book, calculator)
+	# Soft objects (book, calculator, notebook)
 	for det in detections:
 		name = str(det.get("class_name", ""))
 		if name == "book" and not config.allow_book:
@@ -132,6 +148,16 @@ def compute_suspicion(
 		elif name == "calculator" and not config.allow_calculator:
 			score += config.weights.get("calculator", 3)
 			events.append("SOFT_OBJECT:calculator")
+		elif name == "notebook":
+			w = int(config.weights.get("notebook", 0))
+			if w > 0:
+				score += w
+				events.append("SOFT_OBJECT:notebook")
+		# elif name == "monitor":
+		# 	w = int(config.weights.get("monitor", 0))
+		# 	if w > 0:
+		# 		score += w
+		# 		events.append("SOFT_OBJECT:monitor")
 
 	# Gaze behavior
 	gaze = gaze_state.get("gaze", "uncertain")
