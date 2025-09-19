@@ -30,6 +30,10 @@ pip install -r requirements.txt
 streamlit run src/ui/streamlit_app.py
 ```
 
+Windows one-click run:
+
+- Double-click `scripts/QuickStart.bat` (it will create the venv if missing and launch Streamlit).
+
 3) Optional: run pipeline from CLI (webcam by default):
 
 ```powershell
