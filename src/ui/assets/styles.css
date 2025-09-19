@@ -1,0 +1,17 @@
+/* Basic dark navy + teal theme */
+:root {
+  --bg: #0b1220;
+  --panel: #0f1a2b;
+  --text: #d8e3f0;
+  --muted: #8aa0b6;
+  --accent: #00b3b3;
+  --alert: #ff5252;
+  --ok: #2ecc71;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+.status-ok { color: var(--ok); }
+.status-alert { color: var(--alert); }
+.brand-title { color: var(--accent); font-weight: 700; }

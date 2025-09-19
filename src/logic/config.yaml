@@ -1,0 +1,34 @@
+## Scoring threshold; frames with score >= this value are considered alerts
+alert_threshold: 6
+
+## Minimum confidence for phone detections to count toward the score
+phone_conf: 0.5
+
+## Class label order used by the detector; change to match your trained model
+classes:
+  - person
+  - phone
+  - book
+  - earphone
+  - calculator
+
+## Weights added to the score for each rule (tune per exam policy)
+weights:
+  phone: 6               # phone detected with conf >= phone_conf
+  earphone: 6            # earphones detected
+  person: 6              # another person detected
+  book: 6                # book/paper detected when not allowed
+  calculator: 6          # calculator detected when not allowed
+  gaze_off_per_sec: 1    # per-second weight once off-screen gaze exceeds threshold
+  repetitive_head: 2     # repetitive head movement within window
+
+## Allowed items; set true to ignore their detections in scoring
+allow_book: false
+allow_calculator: false
+
+## Gaze off-screen duration (seconds) before adding per-second score
+gaze_duration_threshold: 2.5
+
+## Repetitive head movement parameters
+repeat_dir_threshold: 2    # N same-direction turns within window
+repeat_window_sec: 10.0    # seconds window to evaluate repetition
