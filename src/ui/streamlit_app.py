@@ -1,14 +1,7 @@
 from __future__ import annotations
 
 """
-Streamlit frontend for A.R.A.K with Live, Upload, Settings, and Logs pages.
-
-Highlights
-----------
-- Live Detection: Webcam/OpenCV or optional browser camera via streamlit-webrtc.
-- Upload Video: Offline processing producing an annotated MP4 and CSV logs.
-- Settings: Interactive editor for the YAML config driving thresholds/weights.
-- Logs & Review: View per-session CSV logs and preview saved snapshots.
+A.R.A.K with Live, Upload, Settings, and Logs pages.
 """
 
 import io
@@ -42,6 +35,14 @@ else:
 ASSETS_DIR = os.path.join("src", "ui", "assets")
 STYLE_PATH = os.path.join(ASSETS_DIR, "styles.css")
 CONFIG_PATH = os.path.join("src", "logic", "config.yaml")
+
+# Optional: simple team roster for the About page. Update these entries to your real team.
+# You can safely edit this list or move it to a YAML later if you prefer.
+TEAM_MEMBERS = [
+    {"name": "Member 1", "role": "Role / Responsibility"},
+    {"name": "Member 2", "role": "Role / Responsibility"},
+    {"name": "Member 3", "role": "Role / Responsibility"},
+]
 
 
 def load_styles():
@@ -160,11 +161,11 @@ def page_live():
                             st.session_state.recent_events.appendleft(ev)
                     return av.VideoFrame.from_ndarray(annotated, format='bgr24')
 
-            ctx = webrtc_streamer(
+            ctx = webrtc_streamer(  # type: ignore
                 key="arak-live",
                 mode=WebRtcMode.SENDRECV,
                 media_stream_constraints={"video": True, "audio": False},
-                video_processor_factory=Processor,
+                video_processor_factory=Processor,  # type: ignore
             )
 
             # Monitor status in a light loop while WebRTC is playing. We avoid heavy operations
@@ -250,7 +251,7 @@ def page_upload():
         out_dir = os.path.join("logs", "videos", session_id)
         os.makedirs(out_dir, exist_ok=True)
         out_path = os.path.join(out_dir, f"annotated_{int(time.time())}.mp4")
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
         writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
         i = 0
         while True:
@@ -296,7 +297,7 @@ def page_settings():
     cfg["phone_conf"] = st.slider("Phone confidence threshold", 0.1, 0.9, float(cfg.get("phone_conf", 0.45)))
 
     st.subheader("Weights")
-    for k in ["phone", "earphone", "person", "book", "calculator", "gaze_off_per_sec", "repetitive_head"]:
+    for k in ["phone", "earphone", "smartwatch", "person", "book", "calculator", "notebook", "monitor", "gaze_off_per_sec", "repetitive_head"]:
         cfg.setdefault("weights", {})
         cfg["weights"][k] = st.slider(f"Weight: {k}", 0, 10, int(cfg["weights"].get(k, 3)))
 
@@ -312,6 +313,45 @@ def page_settings():
     st.subheader("Allowed Items")
     cfg["allow_book"] = st.toggle("Allow book/paper", value=bool(cfg.get("allow_book", False)))
     cfg["allow_calculator"] = st.toggle("Allow calculator", value=bool(cfg.get("allow_calculator", False)))
+
+    st.subheader("Detector Settings")
+    cfg["detector_primary"] = st.text_input("Primary YOLO model (name or path)", value=str(cfg.get("detector_primary", "yolov11m.pt")))
+    cfg["detector_secondary"] = st.text_input("Secondary YOLO weights path", value=str(cfg.get("detector_secondary", "models/model_bestV3.pt")))
+    cfg["detector_conf"] = float(st.slider("Detector confidence", 0.1, 0.9, float(cfg.get("detector_conf", 0.4))))
+    cfg["detector_merge_nms"] = st.toggle("Merge overlapping boxes", value=bool(cfg.get("detector_merge_nms", True)))
+    cfg["detector_merge_mode"] = st.selectbox("Merge mode", options=["wbf", "nms"], index=(0 if str(cfg.get("detector_merge_mode", "wbf")).lower()=="wbf" else 1))
+    cfg["detector_nms_iou"] = float(st.slider("Merge IoU threshold", 0.1, 0.9, float(cfg.get("detector_nms_iou", 0.5))))
+
+    with st.expander("Per-class confidence thresholds"):
+        # Provide common classes; keep existing values if present
+        defaults = {
+            "phone": 0.5,
+            "earphone": 0.5,
+            "smartwatch": 0.5,
+            "person": 0.3,
+            "book": 0.4,
+            "calculator": 0.5,
+            "notebook": 0.4,
+        }
+        class_conf = cfg.get("class_conf", {}) or {}
+        for k, dv in defaults.items():
+            class_conf[k] = float(st.slider(f"min conf: {k}", 0.0, 0.95, float(class_conf.get(k, dv))))
+        # Allow custom key/value additions via text
+        st.caption("Add/override custom class:conf (comma-separated pairs, e.g., 'tv:0.4, monitor:0.5')")
+        free = st.text_input("Custom pairs", value="")
+        if free.strip():
+            try:
+                parts = [p.strip() for p in free.split(",") if p.strip()]
+                for p in parts:
+                    if ":" in p:
+                        name, val = p.split(":", 1)
+                        name = name.strip()
+                        valf = float(val.strip())
+                        if name:
+                            class_conf[name] = valf
+            except Exception:
+                st.warning("Could not parse custom pairs; please use 'name:0.5' format")
+        cfg["class_conf"] = class_conf
 
     if st.button("Save Settings"):
         save_cfg(cfg)
@@ -374,13 +414,74 @@ def page_logs():
             st.info("No snapshot for this row.")
 
 
+def page_about():
+    """About page with project description, team, and logos.
+
+    - Shows the project logo if `assets/logo.png` exists, otherwise falls back to
+      rendering `assets/logo.txt` (ASCII) or a helpful message.
+    - Shows the sponsor logo provided at `assets/NTI logo.png` when present.
+    - Lists team members from the `TEAM_MEMBERS` list near the top of this file.
+    """
+    st.header("About A.R.A.K")
+    st.caption("Academic Resilience & Authentication Kernel")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Project Logo")
+        our_logo_png = os.path.join(ASSETS_DIR, "logo.png")
+        our_logo_txt = os.path.join(ASSETS_DIR, "logo.txt")
+        if os.path.exists(our_logo_png):
+            st.image(our_logo_png, use_container_width=True)
+        elif os.path.exists(our_logo_txt):
+            try:
+                with open(our_logo_txt, "r", encoding="utf-8") as f:
+                    st.code(f.read())
+            except Exception:
+                st.info("Add your logo.png under src/ui/assets/ to display it here.")
+        else:
+            st.info("Add your logo.png under src/ui/assets/ to display it here.")
+
+    with col2:
+        st.subheader("Sponsor")
+        sponsor_logo = os.path.join(ASSETS_DIR, "NTI logo.png")
+        if os.path.exists(sponsor_logo):
+            st.image(sponsor_logo, caption="National Telecommunication Institute (NTI)", use_container_width=True)
+        else:
+            st.info("Place sponsor logo at src/ui/assets/NTI logo.png")
+
+    st.markdown("""
+    ### Project Overview
+    A.R.A.K is a local-first, rules-based proctoring toolkit. It combines:
+    - Face and gaze analysis (MediaPipe) for engagement and pose signals.
+    - Object detection (YOLO) to identify disallowed items (e.g., phones, earphones).
+    - A transparent scoring engine so instructors can adjust thresholds and weights.
+
+    The goal is to assist proctoring with explainable signals while keeping data on-device.
+                                            
+        
+                                         وَكَفَىٰ بِاللَّهِ رَقِيبًا 
+                                  (وقال النبيُّ ﷺ:(مَن غشَّنا فليس منا
+                
+    See the [GitHub repository](https://github.com/Ziadelshazly22/A.R.A.K) for more information.
+    """)
+
+    st.markdown("""
+    ### Team
+    Below is a placeholder roster. Update `TEAM_MEMBERS` in `streamlit_app.py` to reflect your team.
+    """)
+    for member in TEAM_MEMBERS:
+        name = member.get("name", "Member")
+        role = member.get("role", "Role")
+        st.markdown(f"- **{name}** — {role}")
+
+
 def main():
     """Streamlit entry point: theme, routing, and page dispatch."""
     st.set_page_config(page_title="A.R.A.K", page_icon="🛡️", layout="wide")
     load_styles()
     page = st.sidebar.radio(
         "Navigation",
-        ["Home", "Live Detection", "Upload Video", "Settings", "Logs & Review"],
+        ["Home", "Live Detection", "Upload Video", "Settings", "Logs & Review", "About"],
     )
     if page == "Home":
         page_home()
@@ -390,8 +491,10 @@ def main():
         page_upload()
     elif page == "Settings":
         page_settings()
-    else:
+    elif page == "Logs & Review":
         page_logs()
+    else:
+        page_about()
 
 
 if __name__ == "__main__":

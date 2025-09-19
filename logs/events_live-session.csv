@@ -1,0 +1,1 @@
+session_id,student_id,timestamp,frame_id,event_type,event_subtype,confidence,bbox,head_pose_pitch,head_pose_yaw,head_pose_roll,gaze,suspicion_score,snapshot_path
