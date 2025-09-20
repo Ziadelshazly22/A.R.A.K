@@ -86,12 +86,13 @@ def save_cfg(cfg):
 def page_home():
     """Enhanced landing page with A.R.A.K branding and smooth animations."""
     # Logo section with enhanced styling
-    logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
+    logo_path = os.path.join(ASSETS_DIR,"A_R_A_K_Logo.svg")
     if os.path.exists(logo_path):
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown('<div class="logo-container fade-in">', unsafe_allow_html=True)
-            st.image(logo_path, use_column_width=True)
+            # st.image(logo_path, use_column_width=True)
+            st.image(logo_path, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
     
     # Enhanced title with gradient and animation
@@ -711,7 +712,7 @@ def main():
     # Enhanced sidebar with branding
     with st.sidebar:
         # Logo in sidebar
-        logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
+        logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.svg")
         if os.path.exists(logo_path):
             st.image(logo_path, width=150)
         
