@@ -77,8 +77,9 @@ def page_live():
     Controls:
     - Start: create a new ProcessingPipeline and start loops
     - Pause/Resume: freeze processing while still showing last annotated frame
-    - Snapshot now: force-save current frame to logs/snapshots
     - Stop: stop the loop and release camera resources
+    
+    Note: Manual snapshots are disabled. Snapshots are taken automatically during suspicious moments only.
     """
     st.header("Live Detection")
     session_id = st.text_input("Session ID", value="live-session")
@@ -92,7 +93,7 @@ def page_live():
     col1, col2, col3, col4 = st.columns(4)
     start = col1.button("Start")
     pause_resume = col2.button("Pause/Resume")
-    snapshot_btn = col3.button("Snapshot now")
+    snapshot_btn = col3.button("Manual Snapshot", disabled=True, help="Manual snapshots disabled - only automatic snapshots during suspicious moments")
     stop = col4.button("Stop")
 
     if "pipeline" not in st.session_state:
@@ -225,9 +226,16 @@ def page_live():
                     
                     if st.session_state.get("snapshot_request", False):
                         try:
-                            pl.snapshot_now()
+                            result = pl.snapshot_now()
                             st.session_state.snapshot_request = False
-                            st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                            if result == "disabled":
+                                st.toast("Manual snapshots disabled: Only automatic snapshots during suspicious moments", icon="🚫")
+                            elif result == "ok":
+                                st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                            elif result == "not_suspicious":
+                                st.toast("Snapshot rejected: Frame not suspicious enough", icon="⚠️")
+                            else:
+                                st.toast("Snapshot failed: No frame available", icon="❌")
                         except Exception as e:
                             st.toast(f"Snapshot failed: {e}", icon="❌")
                 time.sleep(0.25)
@@ -257,11 +265,18 @@ def page_live():
                     for ev in events:
                         st.session_state.recent_events.appendleft(ev)
                 events_box.write({"recent_events": list(st.session_state.recent_events)})
-                # Snapshot on demand
+                # Snapshot on demand (disabled)
                 if st.session_state.get("snapshot_request", False):
-                    pipeline.snapshot_now()
+                    result = pipeline.snapshot_now()
                     st.session_state.snapshot_request = False
-                    st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                    if result == "disabled":
+                        st.toast("Manual snapshots disabled: Only automatic snapshots during suspicious moments", icon="🚫")
+                    elif result == "ok":
+                        st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                    elif result == "not_suspicious":
+                        st.toast("Snapshot rejected: Frame not suspicious enough", icon="⚠️")
+                    else:
+                        st.toast("Snapshot failed: No frame available", icon="❌")
                 # Yield to UI
                 time.sleep(0.01)
             if cam is not None:

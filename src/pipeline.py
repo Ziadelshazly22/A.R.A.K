@@ -329,27 +329,16 @@ class ProcessingPipeline:
         return annotated, score, events, is_alert
 
     def snapshot_now(self, label: str = "SNAPSHOT") -> Optional[str]:
-        """Save a manual snapshot of the last processed frame and return status.
+        """Manual snapshots are disabled. Only automatic snapshots during suspicious moments are allowed.
 
-        The snapshot is logged as a dedicated row with is_alert=True to force image
-        saving, using the last frame and score already stored on the object.
+        This method always returns "disabled" to indicate that manual snapshots
+        are not permitted. Snapshots are only taken automatically during frame
+        processing when is_alert=True (suspicious moments).
+        
+        Returns:
+            "disabled" - Manual snapshots are not allowed
         """
-        if self.last_annotated_frame is None:
-            return None
-        # Log as a special event, forcing a snapshot
-        self.logger.log_event(
-            frame_id=max(0, self.frame_id - 1),
-            event_type=label,
-            event_subtype="manual",
-            confidence=self.last_main_conf,
-            bbox=self.last_main_bbox,
-            head_pose=self.last_gaze_state.get("head_pose", {}),
-            gaze=self.last_gaze_state.get("gaze", "uncertain"),
-            suspicion_score=self.last_score,
-            is_alert=True,
-            annotated_frame=self.last_annotated_frame,
-        )
-        return "ok"
+        return "disabled"
 
 
 def run_realtime(args):
