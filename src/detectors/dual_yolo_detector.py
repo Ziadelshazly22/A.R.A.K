@@ -26,7 +26,7 @@ except Exception:
     YOLO = None  # type: ignore
 
 
-def _normalize_class_name(raw: str) -> str:
+def _normalize_class_name(raw: str) -> Optional[str]:
     """Map various YOLO label variants to our internal canonical names.
 
     Examples
@@ -34,15 +34,22 @@ def _normalize_class_name(raw: str) -> str:
     - 'laptop' -> 'notebook'
     - 'headphones'/'earbuds'/'earpods'/'headset' -> 'earphone'
     - 'smart watch'/'smartwatch' -> 'smartwatch'
+    
+    Returns None if the class is not in our known/allowed classes.
     """
     name = str(raw).strip().lower()
+    
+    # Define our known/allowed classes that we want to detect
+    KNOWN_CLASSES = {
+        "person", "phone", "notebook", "book", "calculator", 
+        "earphone", "smartwatch"
+    }
+    
     # general model mappings
     if name in ("cell phone", "mobile phone", "phone","telephone","mobile","cellphone","smart phone"):
         return "phone"
     if name == "laptop":
         return "notebook"
-    # if name == "tv":
-    #     return "monitor"
     # custom model mappings for wearables/headsets
     if name in ("headphones","headphone", "headset", "earbuds", "earpods", "earphone", "earphones"):
         return "earphone"
@@ -51,8 +58,9 @@ def _normalize_class_name(raw: str) -> str:
     # keep known classes as-is
     if name in ("person", "book", "calculator", "notebook"):
         return name
-    # default to raw
-    return name
+    
+    # Return None for unknown/unwanted classes
+    return None
 
 
 from typing import Any
@@ -79,6 +87,11 @@ def _predict_one(model: Any, frame: np.ndarray, device: Optional[str], conf: flo
         else:
             raw_name = str(cls_id)
         name = _normalize_class_name(raw_name)
+        
+        # Skip detection if class is not in our known/allowed classes
+        if name is None:
+            continue
+            
         # Apply per-class confidence thresholds if provided
         if class_conf and name in class_conf:
             if conf_v < float(class_conf[name]):
