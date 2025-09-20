@@ -49,7 +49,7 @@ def load_styles():
     # Add custom page config for better branding
     st.set_page_config(
         page_title="A.R.A.K - Academic Proctoring System",
-        page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_ICON"),
+        page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_ICON.jpg"),
         layout="centered",
         initial_sidebar_state="expanded"
     )
@@ -714,11 +714,12 @@ def main():
         # Logo in sidebar
         logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.svg")
         if os.path.exists(logo_path):
-            st.image(logo_path, width=150)
+            st.image(logo_path, width=150 ,use_container_width=True)
         
         st.markdown("""
         <div style="text-align: center; margin: 1rem 0;">
-            <h3 class="brand-gradient-text">A.R.A.K</h3>
+            <h3 class="brand-gradient-text">A.R.A.K — أَرَاك</h3>
+            <h3 class="brand-gradient-text">Academic Resilience & Authentication Kernel</h3
             <p style="font-size: 0.8rem; color: var(--text-muted);">Academic Proctoring System</p>
         </div>
         """, unsafe_allow_html=True)
