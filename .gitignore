@@ -28,6 +28,20 @@ venv/
 *.log.*
 *.pid
 *.state
+# Photos and videos
+*.jpg
+*.svg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
 
 
 
