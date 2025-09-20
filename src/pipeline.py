@@ -276,6 +276,9 @@ class ProcessingPipeline:
         self.last_main_conf = 0.0
         self.last_main_bbox = [0.0, 0.0, 0.0, 0.0]
         self.last_gaze_state = {}
+        
+        # Add recent events deque for WebRTC compatibility
+        self.recent_events: Deque[str] = deque(maxlen=50)
 
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, int, List[str], bool]:
         """Process a single BGR frame and return (annotated, score, events, is_alert)."""

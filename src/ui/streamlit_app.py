@@ -137,29 +137,66 @@ def page_live():
 
             class Processor:
                 def __init__(self):
-                    # Reuse or create pipeline
+                    # Reuse or create pipeline - avoid accessing st.session_state in recv()
                     if 'pipeline' in st.session_state and st.session_state.pipeline is not None:
                         self.pipeline = st.session_state.pipeline
                     else:
                         self.pipeline = ProcessingPipeline(session_id=session_val, student_id=student_val)
                         st.session_state.pipeline = self.pipeline
+                    
+                    # Store state flags to avoid accessing st.session_state in recv()
+                    self.paused = False
+                    self.calibrate_requested = False
 
                 def recv(self, frame):  # type: ignore
+                    """Process frame in WebRTC thread - avoid Streamlit context access."""
                     # Since we are in the WebRTC path, 'av' must be available.
                     assert av is not None
-                    if st.session_state.get('paused', False):
+                    
+                    # Update local state from session state with fallback handling
+                    try:
+                        # Minimize session state access to reduce context warnings
+                        self.paused = getattr(st.session_state, 'paused', False) if hasattr(st, 'session_state') else False
+                        self.calibrate_requested = getattr(st.session_state, 'calibrate_request', False) if hasattr(st, 'session_state') else False
+                    except:
+                        # If context access fails completely, use safe defaults
+                        self.paused = False
+                        self.calibrate_requested = False
+                    
+                    # Convert frame to numpy array
+                    img = frame.to_ndarray(format='bgr24')
+                    
+                    if self.paused:
                         if self.pipeline.last_annotated_frame is not None:
                             return av.VideoFrame.from_ndarray(self.pipeline.last_annotated_frame, format='bgr24')
-                    img = frame.to_ndarray(format='bgr24')
-                    if st.session_state.get('calibrate_request', False):
-                        self.pipeline.gaze.calibrate(img)
-                        st.session_state.calibrate_request = False
-                    annotated, score, events, is_alert = self.pipeline.process_frame(img)
-                    # Maintain recent events
-                    if events:
-                        for ev in events:
-                            st.session_state.recent_events.appendleft(ev)
-                    return av.VideoFrame.from_ndarray(annotated, format='bgr24')
+                        else:
+                            # Return original frame if no processed frame available
+                            return av.VideoFrame.from_ndarray(img, format='bgr24')
+                    
+                    if self.calibrate_requested:
+                        try:
+                            self.pipeline.gaze.calibrate(img)
+                            # Reset calibration flag if possible
+                            if hasattr(st, 'session_state') and hasattr(st.session_state, 'calibrate_request'):
+                                st.session_state.calibrate_request = False
+                        except:
+                            # If calibration or context access fails, continue without calibration
+                            pass
+                    
+                    try:
+                        # Process the frame
+                        annotated, score, events, is_alert = self.pipeline.process_frame(img)
+                        
+                        # Store events in pipeline to avoid session state access
+                        if events:
+                            for ev in events:
+                                self.pipeline.recent_events.appendleft(ev)
+                        
+                        return av.VideoFrame.from_ndarray(annotated, format='bgr24')
+                    except Exception as e:
+                        # If processing fails, return original frame to keep stream alive
+                        print(f"Frame processing error: {e}")
+                        return av.VideoFrame.from_ndarray(img, format='bgr24')
 
             ctx = webrtc_streamer(  # type: ignore
                 key="arak-live",
@@ -179,11 +216,20 @@ def page_live():
                         f"Score: {'<span class=\"status-alert\">'+str(score)+'</span>' if is_alert else '<span class=\"status-ok\">'+str(score)+'</span>'}",
                         unsafe_allow_html=True,
                     )
-                    events_box.write({"recent_events": list(st.session_state.recent_events)})
+                    
+                    # Get events from pipeline if available, otherwise use session state
+                    if hasattr(pl, 'recent_events'):
+                        events_box.write({"recent_events": list(pl.recent_events)})
+                    else:
+                        events_box.write({"recent_events": list(st.session_state.recent_events)})
+                    
                     if st.session_state.get("snapshot_request", False):
-                        pl.snapshot_now()
-                        st.session_state.snapshot_request = False
-                        st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                        try:
+                            pl.snapshot_now()
+                            st.session_state.snapshot_request = False
+                            st.toast("Snapshot saved to logs/snapshots/", icon="✅")
+                        except Exception as e:
+                            st.toast(f"Snapshot failed: {e}", icon="❌")
                 time.sleep(0.25)
         else:
             cam = cv2.VideoCapture(0)
