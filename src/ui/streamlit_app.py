@@ -428,7 +428,7 @@ def page_about():
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Project Logo")
-        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.jpg")
+        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
         our_logo_txt = os.path.join(ASSETS_DIR, "logo.txt")
         if os.path.exists(our_logo_png):
             st.image(our_logo_png, use_container_width=True)
@@ -437,9 +437,9 @@ def page_about():
                 with open(our_logo_txt, "r", encoding="utf-8") as f:
                     st.code(f.read())
             except Exception:
-                st.info("Add your logo.png under src/ui/assets/ to display it here.")
+                st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
         else:
-            st.info("Add your logo.png under src/ui/assets/ to display it here.")
+            st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
 
     with col2:
         st.subheader("Sponsor")
