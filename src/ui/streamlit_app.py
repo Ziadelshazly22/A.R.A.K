@@ -425,30 +425,7 @@ def page_about():
     st.header("About A.R.A.K")
     st.caption("Academic Resilience & Authentication Kernel")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Project Logo")
-        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
-        our_logo_txt = os.path.join(ASSETS_DIR, "logo.txt")
-        if os.path.exists(our_logo_png):
-            st.image(our_logo_png, use_container_width=True)
-        elif os.path.exists(our_logo_txt):
-            try:
-                with open(our_logo_txt, "r", encoding="utf-8") as f:
-                    st.code(f.read())
-            except Exception:
-                st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
-        else:
-            st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
-
-    with col2:
-        st.subheader("Sponsor")
-        sponsor_logo = os.path.join(ASSETS_DIR, "NTI logo.png")
-        if os.path.exists(sponsor_logo):
-            st.image(sponsor_logo, caption="National Telecommunication Institute (NTI)", use_container_width=True)
-        else:
-            st.info("Place sponsor logo at src/ui/assets/NTI logo.png")
-
+ 
     st.markdown("""
     ### Project Overview
     A.R.A.K is a local-first, rules-based proctoring toolkit. It combines:
@@ -473,11 +450,46 @@ def page_about():
         name = member.get("name", "Member")
         role = member.get("role", "Role")
         st.markdown(f"- **{name}** — {role}")
+        st.markdown("---")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("A.R.A.K|أَرَاكَ"'\n\n')
+        st.markdown(
+            """
+            <style>
+            .stApp div[data-testid="stImage"] {
+            background-color: #ffffff; /* White background behind logos */
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        our_logo_svg = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.svg")
+        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
+        if os.path.exists(our_logo_svg):
+            st.image(our_logo_svg, use_container_width=True)
+        elif os.path.exists(our_logo_png):
+            try:
+                with open(our_logo_png, "r", encoding="utf-8") as f:
+                    st.code(f.read())
+            except Exception:
+                st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
+        else:
+            st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
+
+    with col2:
+        st.subheader("Sponsor\nNational Telecommunication Institute|المعهد القومي للإتصالات")
+        sponsor_logo = os.path.join(ASSETS_DIR, "NTI logo.png")
+        if os.path.exists(sponsor_logo):
+            st.image(sponsor_logo, caption="National Telecommunication Institute (NTI)", use_container_width=True)
+        else:
+            st.info("National Telecommunication Institute (NTI)")
 
 
 def main():
     """Streamlit entry point: theme, routing, and page dispatch."""
-    st.set_page_config(page_title="A.R.A.K", page_icon="🛡️", layout="wide")
+    st.set_page_config(page_title="A.R.A.K", page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_Logo.png"), layout="wide")
     load_styles()
     page = st.sidebar.radio(
         "Navigation",
