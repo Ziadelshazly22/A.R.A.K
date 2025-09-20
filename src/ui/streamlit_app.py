@@ -489,7 +489,7 @@ def page_about():
 
 def main():
     """Streamlit entry point: theme, routing, and page dispatch."""
-    st.set_page_config(page_title="A.R.A.K", page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_Logo.png"), layout="wide")
+    st.set_page_config(page_title="A.R.A.K", page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_ICON.jpg"), layout="wide")
     load_styles()
     page = st.sidebar.radio(
         "Navigation",
