@@ -161,13 +161,6 @@ class GazeDetector:
 		# Decide gaze direction using simple thresholds on normalized iris positions
 		gaze = "on_screen"
 		gaze_conf = 0.6
-		if nx < 0.45:
-			gaze = "off_left"
-			gaze_conf = min(1.0, (0.45 - nx) * 5 + 0.6)
-		elif nx > 0.60:
-			gaze = "off_right"
-			gaze_conf = min(1.0, (nx - 0.60) * 5 + 0.6)
-
 		down_thresh = 0.35
 		if iris_vert_ratio > 0.45:
 			gaze = "up"
@@ -176,6 +169,14 @@ class GazeDetector:
 			gaze = "down"
 			gaze_conf = min(1.0, (down_thresh - iris_vert_ratio) * 2 + 0.6)
 
+		if nx < 0.45:
+			gaze = "off_left"
+			gaze_conf = min(1.0, (0.45 - nx) * 5 + 0.6)
+		elif nx > 0.60:
+			gaze = "off_right"
+			gaze_conf = min(1.0, (nx - 0.60) * 5 + 0.6)
+
+		
 	# Placeholder head pose (requires solvePnP for real 3D estimation)
 		head_pose = {"pitch": float((0.5 - ny) * 30.0), "yaw": float((nx - 0.5) * 30.0), "roll": 0.0}
 
