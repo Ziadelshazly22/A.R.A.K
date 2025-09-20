@@ -34,9 +34,11 @@ CONFIG_PATH = os.path.join("src", "logic", "config.yaml")
 # Optional: simple team roster for the About page. Update these entries to your real team.
 # You can safely edit this list or move it to a YAML later if you prefer.
 TEAM_MEMBERS = [
-    {"name": "Member 1", "role": "Role / Responsibility"},
-    {"name": "Member 2", "role": "Role / Responsibility"},
-    {"name": "Member 3", "role": "Role / Responsibility"},
+    {"name": "Ziad Mahmoud ElShazly", "github": "https://github.com/Ziadelshazly22", "linkedin": "https://eg.linkedin.com/in/ziad-elshazly"},
+    {"name": "Saaid Ayad", "github": "https://github.com/SaidAyad73", "linkedin": "https://www.linkedin.com/in/saaid-ayad-399321255/"},
+    {"name": "Asmaa Mohammed Abdelgaber", "github": "https://github.com/Asmaagaber89782", "linkedin": "https://www.linkedin.com/in/asmaa-gaber-412b1224a/"},
+    {"name": "Alaa Haitham Mohamed", "github": "https://github.com/Alaa-Haithem", "linkedin": "https://www.linkedin.com/in/alaa-haitham-493005344?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"},
+    {"name": "Osama Ali Mohamed Ali", "github": "https://github.com/osamagaa", "linkedin": "https://github.com/osamagaa"}
 ]
 
 
@@ -649,18 +651,29 @@ def page_about():
  
     st.markdown("""
     ### Project Overview
-    A.R.A.K is a local-first, rules-based proctoring toolkit. It combines:
-    - Face and gaze analysis (MediaPipe) for engagement and pose signals.
-    - Object detection (YOLO) to identify disallowed items (e.g., phones, earphones).
-    - A transparent scoring engine so instructors can adjust thresholds and weights.
-Vision: Empowering educational institutions with a reliable, transparent, and privacy-conscious proctoring solution.
-Mission: The goal is to assist proctoring with explainable signals while keeping data on-device.
+    A.R.A.K (Academic Resilience & Authentication Kernel) — also known in Arabic as أَرَاكَ — is an AI-powered proctoring system designed to ensure academic integrity in online examinations. Our solution combines real-time face recognition, behavior analysis, and gaze tracking to detect cheating attempts with high accuracy while maintaining a seamless exam experience.
+
+    We address one of the most critical challenges in remote education: trust and authenticity. Traditional online exams are vulnerable to unauthorized aids and undetected cheating, which undermines fairness and credibility. A.R.A.K provides an advanced yet accessible solution that empowers universities, training institutions, and exam providers to monitor exams effectively.
+
+    ### Our Mission
+    To safeguard academic integrity and build trust in digital education by leveraging AI-driven monitoring tools that are reliable, transparent, and user-friendly.
+
+    ### Key Features
+    - **Real-time Detection**: Identifies suspicious objects (phones, headphones, extra persons) and behaviors.
+    - **Customizable Rules**: Optional controls for items like calculators or papers, adapting to each exam policy.
+    - **Behavioral Monitoring**: Tracks gaze direction, screen focus, and unusual activities.
+    - **Secure Logging**: Generates downloadable reports with timestamps, snapshots, and student IDs for human review.
+    - **Seamless Experience**: Intuitive UI with video upload testing and live webcam monitoring options.
+
+    ### Our Vision
+
+    - We aspire to become a trusted partner in the future of secure digital education, offering institutions the confidence to conduct exams anywhere in the world without compromising integrity.
 
                                          وَكَفَىٰ بِاللَّهِ رَقِيبًا
                                   (وقال النبيُّ ﷺ:(مَن غشَّنا فليس منا
 
-
-    """)    
+ 
+                    """)    
     st.markdown("""
     ### Technology Stack       
     See the [GitHub repository](https://github.com/Ziadelshazly22/A.R.A.K) for more information.
@@ -673,7 +686,7 @@ Mission: The goal is to assist proctoring with explainable signals while keeping
         name = member.get("name", "Member")
         github = member.get("github", "#")
         linkedin = member.get("linkedin", "#")
-        st.markdown(f"  - [GitHub]({github}) | [LinkedIn]({linkedin})")
+        st.markdown(f"  - **{name}**: [GitHub]({github}) | [LinkedIn]({linkedin})")
         st.markdown("---")
 
     

@@ -31,7 +31,7 @@ from src.logic.suspicion_scoring import (
 )
 from src.logger import EventLogger
 
-
+FRAME_SKIP = 10  # عشان تعملي processing لكل 10 فريمات
 def load_config_yaml(path: str) -> ScoringConfig:
     """Load scoring configuration from a YAML file if it exists, else defaults.
 
@@ -270,7 +270,7 @@ class ProcessingPipeline:
         self.history = TemporalHistory(maxlen=300)
         self.frame_id = 0
         # Keep last frame info for "Snapshot now" from UI
-        self.last_annotated_frame = None
+        self.last_annotated_frame = np.zeros((1, 1, 3), dtype=np.uint8)  # Default black frame
         self.last_score = 0
         self.last_events = []
         self.last_main_conf = 0.0
@@ -280,8 +280,65 @@ class ProcessingPipeline:
         # Add recent events deque for WebRTC compatibility
         self.recent_events: Deque[str] = deque(maxlen=50)
 
+    # def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, int, List[str], bool]:
+    #     """Process a single BGR frame and return (annotated, score, events, is_alert)."""
+        
+    #     detections = self.yolo.detect(frame, conf_thresh=self.det_conf, class_conf=self.class_conf)
+    #     if self.det_merge:
+    #         if self.det_merge_mode == 'wbf':
+    #             detections = merge_wbf(detections, iou_thr=self.det_iou, skip_box_thr=min(self.class_conf.values()) if self.class_conf else 0.0)
+    #         else:
+    #             detections = merge_nms(detections, self.det_iou)
+    #     gaze_state = self.gaze.process(frame)
+    #     score, events, is_alert = compute_suspicion(
+    #         detections, gaze_state, self.history, self.cfg
+    #     )
+
+    #     annotated = annotate_frame(frame, detections, gaze_state, score)
+
+    #     # Log primary event per frame (Normal or SUS)
+    #     event_type = "SUS" if is_alert else "NORMAL"
+    #     event_subtype = ";".join(events) if events else "none"
+    #     main_conf = max([d.get("conf", 0.0) for d in detections], default=0.0)
+    #     main_bbox = max(
+    #         [d.get("bbox", [0, 0, 0, 0]) for d in detections],
+    #         key=lambda b: (b[2] - b[0]) * (b[3] - b[1]) if b else 0,
+    #         default=[0, 0, 0, 0],
+    #     )
+    #     self.logger.log_event(
+    #         frame_id=self.frame_id,
+    #         event_type=event_type,
+    #         event_subtype=event_subtype,
+    #         confidence=float(main_conf),
+    #         bbox=[float(x) for x in main_bbox],
+    #         head_pose=gaze_state.get("head_pose", {}),
+    #         gaze=gaze_state.get("gaze", "uncertain"),
+    #         suspicion_score=score,
+    #         is_alert=is_alert,
+    #         annotated_frame=annotated,
+    #     )
+
+    #     # Store last info for snapshot helper
+    #     self.last_annotated_frame = annotated
+    #     self.last_score = score
+    #     self.last_events = events
+    #     self.last_main_conf = float(main_conf)
+    #     self.last_main_bbox = [float(x) for x in main_bbox]
+    #     self.last_gaze_state = dict(gaze_state)
+
+    #     self.frame_id += 1
+    #     return annotated, score, events, is_alert
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, int, List[str], bool]:
         """Process a single BGR frame and return (annotated, score, events, is_alert)."""
+        if self.frame_id % FRAME_SKIP != 0:
+                        # لو مش فريم نحتاجه، نرجع آخر نتيجة محفوظة
+            self.frame_id += 1
+            return (
+                self.last_annotated_frame,
+                self.last_score,
+                self.last_events,
+                False  # أو False لو مفيش alert
+                )
         detections = self.yolo.detect(frame, conf_thresh=self.det_conf, class_conf=self.class_conf)
         if self.det_merge:
             if self.det_merge_mode == 'wbf':
@@ -326,7 +383,7 @@ class ProcessingPipeline:
         self.last_gaze_state = dict(gaze_state)
 
         self.frame_id += 1
-        return annotated, score, events, is_alert
+        return annotated, score, events,is_alert
 
     def snapshot_now(self, label: str = "SNAPSHOT") -> Optional[str]:
         """Manual snapshots are disabled. Only automatic snapshots during suspicious moments are allowed.
