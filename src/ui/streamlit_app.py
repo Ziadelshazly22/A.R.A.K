@@ -662,18 +662,26 @@ Mission: The goal is to assist proctoring with explainable signals while keeping
     """)
 
     st.markdown("""
-    ### Team
-    Below is a placeholder roster. Update `TEAM_MEMBERS` in `streamlit_app.py` to reflect your team.
+    ### Meet the team behind A.R.A.K:
     """)
     for member in TEAM_MEMBERS:
         name = member.get("name", "Member")
-        role = member.get("role", "Role")
-        st.markdown(f"- **{name}** — {role}")
+        github = member.get("github", "#")
+        linkedin = member.get("linkedin", "#")
+        st.markdown(f"  - [GitHub]({github}) | [LinkedIn]({linkedin})")
         st.markdown("---")
+
+    
+    st.subheader("Contact Us")
+    st.markdown("""
+    For inquiries, feedback, or support, please reach out to us:
+    - 📧 Email: [contact@arak.com](mailto:ziad.m.elshazly@gmail.com)
+    - 🌐 Website: [www.arak.com](https://www.arak.com)
+    """)
 #left bottom corner sponsor on about page 
     col1, col2 = st.columns([2, 1])
 
-    with col2:
+    with col1:
         st.subheader("Sponsor")
         st.caption("National Telecommunication Institute | المعهد القومي للإتصالات")
         sponsor_logo = os.path.join(ASSETS_DIR, "NTI logo.png")
