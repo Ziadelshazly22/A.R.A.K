@@ -91,7 +91,7 @@ class GazeDetector:
 		rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 		results = self.face_mesh.process(rgb)
 
-		if not results.multi_face_landmarks:
+		if not results.multi_face_landmarks: # pyright: ignore[reportAttributeAccessIssue] #Ignore
 			return {
 				"gaze": "uncertain",
 				"gaze_conf": 0.0,
@@ -99,7 +99,7 @@ class GazeDetector:
 				"pupil_rel": {"x": 0.5, "y": 0.5},
 			}
 
-		lm = results.multi_face_landmarks[0].landmark
+		lm = results.multi_face_landmarks[0].landmark # pyright: ignore[reportAttributeAccessIssue]
 		l_min = (
 			int(lm[self.LEFT_EYE_IDX[0]].x * w),
 			int(lm[self.LEFT_EYE_IDX[0]].y * h),

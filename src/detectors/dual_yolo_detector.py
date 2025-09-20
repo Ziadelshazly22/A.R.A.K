@@ -101,7 +101,7 @@ class DualYoloDetector:
     Parameters
     ----------
     primary_model: str
-        Pretrained YOLOv11 model name or path (e.g., 'yolov11m.pt').
+        Pretrained YOLO11 model name or path (e.g., 'yolo11m.pt').
     secondary_model: str
         Custom YOLO weights path for exam-specific objects (e.g., 'models/model_bestV3.pt').
     device: Optional[str]
@@ -110,7 +110,7 @@ class DualYoloDetector:
 
     def __init__(
         self,
-        primary_model: str = "yolov11m.pt",
+        primary_model: str = "yolo11m.pt",
         secondary_model: str = os.path.join("models", "model_bestV3.pt"),
         device: Optional[str] = None,
     ) -> None:

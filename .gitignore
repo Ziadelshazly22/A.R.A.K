@@ -14,13 +14,22 @@ venv/
 /models/
 *.h5
 *.ckpt
-
+*.pt
+*.onnx
+*.tflite
+*.weights
 # Data files - usually too large
 /data/
 *.csv
 *.tsv
 *.json
 *.xml
+*.out
+*.log.*
+*.pid
+*.state
+
+
 
 # OS generated files
 .DS_Store

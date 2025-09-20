@@ -315,7 +315,7 @@ def page_settings():
     cfg["allow_calculator"] = st.toggle("Allow calculator", value=bool(cfg.get("allow_calculator", False)))
 
     st.subheader("Detector Settings")
-    cfg["detector_primary"] = st.text_input("Primary YOLO model (name or path)", value=str(cfg.get("detector_primary", "yolov11m.pt")))
+    cfg["detector_primary"] = st.text_input("Primary YOLO model (name or path)", value=str(cfg.get("detector_primary", "yolo11m.pt")))
     cfg["detector_secondary"] = st.text_input("Secondary YOLO weights path", value=str(cfg.get("detector_secondary", "models/model_bestV3.pt")))
     cfg["detector_conf"] = float(st.slider("Detector confidence", 0.1, 0.9, float(cfg.get("detector_conf", 0.4))))
     cfg["detector_merge_nms"] = st.toggle("Merge overlapping boxes", value=bool(cfg.get("detector_merge_nms", True)))
@@ -428,7 +428,7 @@ def page_about():
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Project Logo")
-        our_logo_png = os.path.join(ASSETS_DIR, "logo.png")
+        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.jpg")
         our_logo_txt = os.path.join(ASSETS_DIR, "logo.txt")
         if os.path.exists(our_logo_png):
             st.image(our_logo_png, use_container_width=True)

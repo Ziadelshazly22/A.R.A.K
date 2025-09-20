@@ -36,8 +36,8 @@ repeat_dir_threshold: 2    # N same-direction turns within window
 repeat_window_sec: 10.0    # seconds window to evaluate repetition
 
 ## Detector settings
-# Primary YOLO model (name or path), e.g., yolov11m.pt
-detector_primary: yolov11m.pt
+# Primary YOLO model (name or path), e.g., yolo11m.pt
+detector_primary: yolo11m.pt
 # Secondary custom YOLO weights path
 detector_secondary: models/model_bestV3.pt
 # Minimum confidence threshold passed to both models

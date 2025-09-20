@@ -53,7 +53,7 @@ def load_config_yaml(path: str) -> ScoringConfig:
         repeat_dir_threshold=int(cfg.get("repeat_dir_threshold", 2)),
         repeat_window_sec=float(cfg.get("repeat_window_sec", 10.0)),
         # Detector and thresholds extensions
-        detector_primary=cfg.get("detector_primary", "yolov11m.pt"),
+        detector_primary=cfg.get("detector_primary", "yolo11m.pt"),
         detector_secondary=cfg.get("detector_secondary", os.path.join("models", "model_bestV3.pt")),
         detector_conf=float(cfg.get("detector_conf", 0.4)),
         detector_merge_nms=bool(cfg.get("detector_merge_nms", True)),
@@ -252,7 +252,7 @@ class ProcessingPipeline:
         # Initialize dual detectors: pretrained YOLOv11 and custom nano weights
         # Primary is name-based, secondary expects your weights at models/model_bestV3.pt
         # Detector settings from config
-        primary = getattr(self.cfg, 'detector_primary', 'yolov11m.pt') if hasattr(self.cfg, 'detector_primary') else 'yolov11m.pt'
+        primary = getattr(self.cfg, 'detector_primary', 'yolo11m.pt') if hasattr(self.cfg, 'detector_primary') else 'yolo11m.pt'
         secondary = getattr(self.cfg, 'detector_secondary', os.path.join('models', 'model_bestV3.pt')) if hasattr(self.cfg, 'detector_secondary') else os.path.join('models', 'model_bestV3.pt')
         self.det_conf = float(getattr(self.cfg, 'detector_conf', 0.4))
         self.det_merge = bool(getattr(self.cfg, 'detector_merge_nms', True))

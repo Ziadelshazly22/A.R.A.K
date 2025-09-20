@@ -51,7 +51,7 @@ class ScoringConfig:
 		}
 	)
 	# Detector settings (read from config.yaml, used by pipeline)
-	detector_primary: str = "yolov11m.pt"
+	detector_primary: str = "yolo11m.pt"
 	detector_secondary: str = "models/model_bestV3.pt"
 	detector_conf: float = 0.4
 	detector_merge_nms: bool = True
