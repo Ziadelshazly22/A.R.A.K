@@ -658,7 +658,11 @@ Mission: The goal is to assist proctoring with explainable signals while keeping
 
                                          وَكَفَىٰ بِاللَّهِ رَقِيبًا
                                   (وقال النبيُّ ﷺ:(مَن غشَّنا فليس منا
-                
+
+
+    """)    
+    st.markdown("""
+    ### Technology Stack       
     See the [GitHub repository](https://github.com/Ziadelshazly22/A.R.A.K) for more information.
     """)
 
