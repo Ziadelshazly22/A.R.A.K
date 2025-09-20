@@ -1,17 +1,405 @@
-/* Basic dark navy + teal theme */
+/* ===== A.R.A.K Enhanced Styling - Academic Resilience & Authentication Kernel ===== */
+
+/* === CSS Variables === */
 :root {
-  --bg: #0b1220;
-  --panel: #0f1a2b;
-  --text: #d8e3f0;
-  --muted: #8aa0b6;
-  --accent: #00b3b3;
-  --alert: #ff5252;
-  --ok: #2ecc71;
+  /* Core Brand Colors */
+  --primary-bg: linear-gradient(135deg, #0a0e1a 0%, #1a1f3a 50%, #0f1724 100%);
+  --secondary-bg: linear-gradient(135deg, #161d35 0%, #1f2a47 100%);
+  --panel-bg: rgba(15, 26, 43, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #b8d4e6;
+  --text-muted: #7a95b0;
+  --text-accent: #00d4ff;
+  
+  /* Brand Colors */
+  --brand-primary: #00b3ff;
+  --brand-secondary: #0099cc;
+  --brand-accent: #00ffff;
+  --brand-glow: rgba(0, 180, 255, 0.3);
+  
+  /* Status Colors */
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff4444;
+  --info: #44aaff;
+  
+  /* UI Elements */
+  --border-radius: 12px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glow-shadow: 0 0 20px var(--brand-glow);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* === Base Styling === */
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--primary-bg) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+  overflow-x: hidden;
 }
-.status-ok { color: var(--ok); }
-.status-alert { color: var(--alert); }
-.brand-title { color: var(--accent); font-weight: 700; }
+
+.main {
+  background: transparent !important;
+}
+
+/* === Enhanced Sidebar === */
+.css-1d391kg {
+  background: var(--secondary-bg) !important;
+  border-right: 1px solid var(--brand-primary) !important;
+  backdrop-filter: blur(10px);
+}
+
+.css-1d391kg .css-1544g2n {
+  background: transparent !important;
+}
+
+/* === Page Container === */
+.block-container {
+  padding: 2rem 1rem !important;
+  max-width: 1200px !important;
+}
+
+/* === Brand Title Styling === */
+.brand-title {
+  background: linear-gradient(45deg, var(--brand-primary), var(--brand-accent)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  margin-bottom: 1rem !important;
+  animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+  0% { filter: drop-shadow(0 0 5px var(--brand-glow)); }
+  100% { filter: drop-shadow(0 0 20px var(--brand-glow)); }
+}
+
+/* === Glass Card Effect === */
+.glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--shadow) !important;
+  padding: 1.5rem !important;
+  margin: 1rem 0 !important;
+  transition: var(--transition) !important;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(0, 180, 255, 0.3) !important;
+}
+
+/* === Enhanced Buttons === */
+.stButton > button {
+  background: linear-gradient(45deg, var(--brand-primary), var(--brand-secondary)) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  border-radius: var(--border-radius) !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  transition: var(--transition) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.stButton > button:before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+  transition: left 0.5s !important;
+}
+
+.stButton > button:hover:before {
+  left: 100% !important;
+}
+
+.stButton > button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--glow-shadow) !important;
+  background: linear-gradient(45deg, var(--brand-secondary), var(--brand-accent)) !important;
+}
+
+.stButton > button:disabled {
+  background: linear-gradient(45deg, #555, #777) !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* === Status Indicators === */
+.status-ok { 
+  color: var(--success) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 0 10px var(--success) !important;
+}
+
+.status-alert { 
+  color: var(--danger) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 0 10px var(--danger) !important;
+  animation: alertPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes alertPulse {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+.status-warning {
+  color: var(--warning) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 0 10px var(--warning) !important;
+}
+
+/* === Enhanced Input Fields === */
+.stTextInput > div > div > input {
+  background: var(--panel-bg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--border-radius) !important;
+  color: var(--text-primary) !important;
+  transition: var(--transition) !important;
+}
+
+.stTextInput > div > div > input:focus {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 15px var(--brand-glow) !important;
+}
+
+.stSelectbox > div > div > div {
+  background: var(--panel-bg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+/* === Loading Animation === */
+.loading-spinner {
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 3px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 50% !important;
+  border-top-color: var(--brand-primary) !important;
+  animation: spin 1s ease-in-out infinite !important;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === Progress Bars === */
+.stProgress > div > div > div > div {
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent)) !important;
+  box-shadow: var(--glow-shadow) !important;
+}
+
+/* === Metrics Display === */
+.metric-container {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: var(--border-radius) !important;
+  padding: 1rem !important;
+  text-align: center !important;
+  transition: var(--transition) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.metric-container:hover {
+  transform: scale(1.05) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+/* === Alert Boxes === */
+.stAlert {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: var(--border-radius) !important;
+  border-left: 4px solid var(--brand-primary) !important;
+}
+
+/* === Video Display === */
+video {
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--shadow) !important;
+  border: 2px solid var(--brand-primary) !important;
+}
+
+/* === Data Tables === */
+.dataframe {
+  background: var(--panel-bg) !important;
+  border-radius: var(--border-radius) !important;
+  overflow: hidden !important;
+}
+
+.dataframe th {
+  background: var(--brand-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dataframe td {
+  background: var(--panel-bg) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* === Sidebar Navigation === */
+.css-1544g2n {
+  background: transparent !important;
+}
+
+.css-1544g2n a {
+  color: var(--text-secondary) !important;
+  transition: var(--transition) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--border-radius) !important;
+  margin: 0.25rem 0 !important;
+}
+
+.css-1544g2n a:hover {
+  background: var(--glass-bg) !important;
+  color: var(--brand-accent) !important;
+  transform: translateX(5px) !important;
+}
+
+/* === Logo Styling === */
+.logo-container {
+  text-align: center !important;
+  margin: 2rem 0 !important;
+}
+
+.logo-container img {
+  max-width: 200px !important;
+  height: auto !important;
+  filter: drop-shadow(0 0 15px var(--brand-glow)) !important;
+  transition: var(--transition) !important;
+}
+
+.logo-container img:hover {
+  transform: scale(1.1) !important;
+  filter: drop-shadow(0 0 25px var(--brand-glow)) !important;
+}
+
+/* === Animation Classes === */
+.fade-in {
+  animation: fadeIn 0.6s ease-out !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out !important;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out !important;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  .block-container {
+    padding: 1rem 0.5rem !important;
+  }
+  
+  .glass-card {
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+  }
+  
+  .logo-container img {
+    max-width: 150px !important;
+  }
+}
+
+/* === Custom Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--panel-bg) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, var(--brand-primary), var(--brand-secondary)) !important;
+  border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, var(--brand-secondary), var(--brand-accent)) !important;
+}
+
+/* === Floating Action Elements === */
+.floating-element {
+  position: fixed !important;
+  z-index: 1000 !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 50% !important;
+  transition: var(--transition) !important;
+}
+
+.floating-element:hover {
+  transform: scale(1.1) !important;
+  box-shadow: var(--glow-shadow) !important;
+}
+
+/* === Brand Accent Elements === */
+.brand-accent {
+  color: var(--brand-accent) !important;
+  font-weight: 600 !important;
+}
+
+.brand-gradient-text {
+  background: linear-gradient(45deg, var(--brand-primary), var(--brand-accent)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* === Enhanced Tooltips === */
+.stTooltipIcon {
+  color: var(--brand-primary) !important;
+}
+
+/* === Footer Styling === */
+.footer {
+  text-align: center !important;
+  padding: 2rem !important;
+  margin-top: 3rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-muted) !important;
+}
+
+/* === Performance Optimizations === */
+* {
+  will-change: auto !important;
+}
+
+.stApp {
+  background: var(--primary-bg) !important;
+}

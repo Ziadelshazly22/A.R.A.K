@@ -1,9 +1,4 @@
 from __future__ import annotations
-
-"""
-A.R.A.K with Live, Upload, Settings, and Logs pages.
-"""
-
 import io
 import os
 import time
@@ -46,10 +41,34 @@ TEAM_MEMBERS = [
 
 
 def load_styles():
-    """Inject CSS styles into the Streamlit app if styles.css is present."""
+    """Inject enhanced CSS styles into the Streamlit app."""
     if os.path.exists(STYLE_PATH):
         with open(STYLE_PATH, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    
+    # Add custom page config for better branding
+    st.set_page_config(
+        page_title="A.R.A.K - Academic Proctoring System",
+        page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_ICON"),
+        layout="centered",
+        initial_sidebar_state="expanded"
+    )
+    
+    # Center the content along the main vertical diagonal of the sidebar
+    st.markdown(
+        """
+        <style>
+        .css-18e3th9 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 def load_cfg():
@@ -65,37 +84,123 @@ def save_cfg(cfg):
 
 
 def page_home():
-    """Landing page with a short description and navigation hint."""
-    st.title("A.R.A.K — Academic Resilience & Authentication Kernel")
-    st.markdown("Secure, local, rules-based proctoring with live and offline analysis.")
-    st.info("Use the sidebar to navigate: Live Detection, Upload Video, Settings, Logs & Review.")
+    """Enhanced landing page with A.R.A.K branding and smooth animations."""
+    # Logo section with enhanced styling
+    logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
+    if os.path.exists(logo_path):
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown('<div class="logo-container fade-in">', unsafe_allow_html=True)
+            st.image(logo_path, use_column_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Enhanced title with gradient and animation
+    st.markdown("""
+    <div class="fade-in">
+        <h1 class="brand-title" style="font-size: 3.5rem; margin: 2rem 0;">
+            A.R.A.K — أَرَاك
+        </h1>
+        <h2 class="brand-gradient-text" style="text-align: center; font-size: 1.5rem; margin-bottom: 2rem;">
+            Academic Resilience & Authentication Kernel
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Enhanced description with glass card effect
+    st.markdown("""
+    <div class="glass-card fade-in" style="text-align: center; animation-delay: 0.3s;">
+        <h3 style="color: var(--brand-accent); margin-bottom: 1rem;">🔒 Secure • 💻 Local • 🤖 AI-Powered Proctoring</h3>
+        <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-secondary);">
+            Experience next-generation academic integrity monitoring with real-time object detection, 
+            gaze tracking, and behavioral analysis. All processing happens locally for maximum privacy and security.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Feature highlights with animations
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class="glass-card slide-in-left metric-container" style="animation-delay: 0.5s;">
+            <h4 style="color: var(--brand-primary);">🎯 Live Detection</h4>
+            <p>Real-time webcam monitoring with instant alerts</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="glass-card fade-in metric-container" style="animation-delay: 0.7s;">
+            <h4 style="color: var(--brand-secondary);">📹 Video Analysis</h4>
+            <p>Upload and analyze recorded exam sessions</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="glass-card slide-in-right metric-container" style="animation-delay: 0.9s;">
+            <h4 style="color: var(--brand-accent);">📊 Smart Reports</h4>
+            <p>Comprehensive logs and analytical insights</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Navigation hint with enhanced styling
+    st.markdown("""
+    <div class="glass-card fade-in" style="margin-top: 2rem; text-align: center; animation-delay: 1.1s;">
+        <p style="color: var(--text-muted);">
+            📍 <strong>Navigate using the sidebar</strong> to access Live Detection, Upload Video, Settings, and Logs & Review
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def page_live():
-    """Live webcam detection page with optional WebRTC and controls.
-
-    Controls:
-    - Start: create a new ProcessingPipeline and start loops
-    - Pause/Resume: freeze processing while still showing last annotated frame
-    - Stop: stop the loop and release camera resources
+    """Enhanced live webcam detection page with modern UI and animations."""
     
-    Note: Manual snapshots are disabled. Snapshots are taken automatically during suspicious moments only.
-    """
-    st.header("Live Detection")
-    session_id = st.text_input("Session ID", value="live-session")
-    student_id = st.text_input("Student ID", value="student-001")
-    calibrate_on_start = st.checkbox("Calibrate on start", value=False)
+    st.markdown("""
+    <div class="fade-in">
+        <h2 class="brand-gradient-text" style="text-align: center; margin-bottom: 2rem;">
+            🔴 Live Detection & Monitoring
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Configuration section with glass card effect
+    st.markdown('<div class="glass-card slide-in-left">', unsafe_allow_html=True)
+    st.markdown("### ⚙️ Session Configuration")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        session_id = st.text_input("📋 Session ID", value="live-session", help="Unique identifier for this monitoring session")
+    with col2:
+        student_id = st.text_input("👤 Student ID", value="student-001", help="Student identifier for tracking")
+    
+    calibrate_on_start = st.checkbox("🎯 Calibrate gaze on start", value=False, help="Calibrate gaze detection for better accuracy")
+    
     use_webrtc = False
     if HAS_WEBRTC:
-        use_webrtc = st.checkbox("Use WebRTC camera (browser)", value=False)
+        use_webrtc = st.checkbox("🌐 Use WebRTC camera (browser)", value=False, help="Use browser camera for better performance")
     else:
-        st.caption("Install streamlit-webrtc to enable browser camera: pip install streamlit-webrtc")
+        st.markdown("💡 **Tip:** Install streamlit-webrtc for enhanced browser camera support: `pip install streamlit-webrtc`")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Control buttons with enhanced styling
+    st.markdown('<div class="glass-card slide-in-right" style="animation-delay: 0.3s;">', unsafe_allow_html=True)
+    st.markdown("### 🎮 Session Controls")
+    
     col1, col2, col3, col4 = st.columns(4)
-    start = col1.button("Start")
-    pause_resume = col2.button("Pause/Resume")
-    snapshot_btn = col3.button("Manual Snapshot", disabled=True, help="Manual snapshots disabled - only automatic snapshots during suspicious moments")
-    stop = col4.button("Stop")
+    with col1:
+        start = st.button("▶️ Start", help="Begin live monitoring session")
+    with col2:
+        pause_resume = st.button("⏸️ Pause/Resume", help="Pause or resume current session")
 
+    with col3:
+        stop = st.button("⏹️ Stop", help="Stop monitoring and release camera")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Session state initialization
     if "pipeline" not in st.session_state:
         st.session_state.pipeline = None
     if "running" not in st.session_state:
@@ -108,18 +213,34 @@ def page_live():
         st.session_state.snapshot_request = False
     if "recent_events" not in st.session_state:
         st.session_state.recent_events = deque(maxlen=10)
+    
+    # Button actions
     if start:
         st.session_state.pipeline = ProcessingPipeline(session_id=session_id, student_id=student_id)
         st.session_state.running = True
         st.session_state.paused = False
         if calibrate_on_start:
             st.session_state.calibrate_request = True
+        st.success("🚀 Monitoring session started successfully!")
+        
     if pause_resume:
         st.session_state.paused = not st.session_state.paused
-    if snapshot_btn:
-        st.session_state.snapshot_request = True
+        if st.session_state.paused:
+            st.warning("⏸️ Session paused")
+        else:
+            st.info("▶️ Session resumed")
+
     if stop:
         st.session_state.running = False
+        st.info("⏹️ Monitoring session stopped")
+
+    # Enhanced status display
+    if st.session_state.get("running", False):
+        st.markdown("""
+        <div class="glass-card fade-in" style="margin-top: 1rem; animation-delay: 0.5s;">
+            <h3 style="color: var(--brand-accent); text-align: center;">📊 Live Status Monitor</h3>
+        </div>
+        """, unsafe_allow_html=True)
 
     if st.session_state.get("pipeline") is not None and st.session_state.get("running", False):
         pipeline = st.session_state.pipeline
@@ -213,14 +334,52 @@ def page_live():
                 if pl is not None:
                     score = pl.last_score
                     is_alert = score >= getattr(pl, 'cfg').alert_threshold
-                    info_ph.markdown(
-                        f"Score: {'<span class=\"status-alert\">'+str(score)+'</span>' if is_alert else '<span class=\"status-ok\">'+str(score)+'</span>'}",
-                        unsafe_allow_html=True,
-                    )
                     
-                    # Get events from pipeline if available, otherwise use session state
-                    if hasattr(pl, 'recent_events'):
-                        events_box.write({"recent_events": list(pl.recent_events)})
+                    # Enhanced status display with metrics
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.markdown(f"""
+                        <div class="metric-container">
+                            <h4>Suspicion Score</h4>
+                            <h2 style="color: {'var(--danger)' if is_alert else 'var(--success)'};">
+                                {score}
+                            </h2>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        status_text = "🚨 ALERT" if is_alert else "✅ NORMAL"
+                        status_color = "var(--danger)" if is_alert else "var(--success)"
+                        st.markdown(f"""
+                        <div class="metric-container">
+                            <h4>Status</h4>
+                            <h3 style="color: {status_color};">
+                                {status_text}
+                            </h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col3:
+                        threshold = getattr(pl, 'cfg').alert_threshold
+                        st.markdown(f"""
+                        <div class="metric-container">
+                            <h4>Alert Threshold</h4>
+                            <h2 style="color: var(--text-muted);">
+                                {threshold}
+                            </h2>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Progress bar for suspicion level
+                    progress = min(score / threshold, 1.0) if threshold > 0 else 0.0
+                    st.progress(progress, text=f"Suspicion Level: {score}/{threshold}")
+                    
+                    # Events display with enhanced styling
+                    if hasattr(pl, 'recent_events') and pl.recent_events:
+                        st.markdown("#### 📝 Recent Events")
+                        events_text = " • ".join(list(pl.recent_events)[-5:])  # Show last 5 events
+                        st.markdown(f"<div class='glass-card'>{events_text}</div>", unsafe_allow_html=True)
                     else:
                         events_box.write({"recent_events": list(st.session_state.recent_events)})
                     
@@ -493,11 +652,10 @@ def page_about():
     - Face and gaze analysis (MediaPipe) for engagement and pose signals.
     - Object detection (YOLO) to identify disallowed items (e.g., phones, earphones).
     - A transparent scoring engine so instructors can adjust thresholds and weights.
+Vision: Empowering educational institutions with a reliable, transparent, and privacy-conscious proctoring solution.
+Mission: The goal is to assist proctoring with explainable signals while keeping data on-device.
 
-    The goal is to assist proctoring with explainable signals while keeping data on-device.
-                                            
-        
-                                         وَكَفَىٰ بِاللَّهِ رَقِيبًا 
+                                         وَكَفَىٰ بِاللَّهِ رَقِيبًا
                                   (وقال النبيُّ ﷺ:(مَن غشَّنا فليس منا
                 
     See the [GitHub repository](https://github.com/Ziadelshazly22/A.R.A.K) for more information.
@@ -512,62 +670,89 @@ def page_about():
         role = member.get("role", "Role")
         st.markdown(f"- **{name}** — {role}")
         st.markdown("---")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("A.R.A.K|أَرَاكَ"'\n\n')
-        st.markdown(
-            """
-            <style>
-            .stApp div[data-testid="stImage"] {
-            background-color: #ffffff; /* White background behind logos */
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
-        our_logo_svg = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.svg")
-        our_logo_png = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
-        if os.path.exists(our_logo_svg):
-            st.image(our_logo_svg, use_container_width=True)
-        elif os.path.exists(our_logo_png):
-            try:
-                with open(our_logo_png, "r", encoding="utf-8") as f:
-                    st.code(f.read())
-            except Exception:
-                st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
-        else:
-            st.info("A.R.A.K|أَرَاكَ — Academic Resilience & Authentication Kernel")
+#left bottom corner sponsor on about page 
+    col1, col2 = st.columns([2, 1])
 
     with col2:
-        st.subheader("Sponsor\nNational Telecommunication Institute|المعهد القومي للإتصالات")
+        st.subheader("Sponsor")
+        st.caption("National Telecommunication Institute | المعهد القومي للإتصالات")
         sponsor_logo = os.path.join(ASSETS_DIR, "NTI logo.png")
         if os.path.exists(sponsor_logo):
-            st.image(sponsor_logo, caption="National Telecommunication Institute (NTI)", use_container_width=True)
+            st.image(sponsor_logo, caption="National Telecommunication Institute (NTI)", width=150)
         else:
             st.info("National Telecommunication Institute (NTI)")
 
 
 def main():
-    """Streamlit entry point: theme, routing, and page dispatch."""
-    st.set_page_config(page_title="A.R.A.K", page_icon=os.path.join(ASSETS_DIR,"A_R_A_K_ICON.jpg"), layout="wide")
-    load_styles()
-    page = st.sidebar.radio(
-        "Navigation",
-        ["Home", "Live Detection", "Upload Video", "Settings", "Logs & Review", "About"],
+    """Enhanced Streamlit entry point with improved branding and navigation."""
+    # Enhanced page configuration
+    st.set_page_config(
+        page_title="A.R.A.K - Academic Proctoring System",
+        page_icon=os.path.join(ASSETS_DIR, "A_R_A_K_ICON.jpg"),
+        layout="wide",
+        initial_sidebar_state="expanded",
+        menu_items={
+            'Get Help': 'https://github.com/Ziadelshazly22/A.R.A.K',
+            'Report a bug': 'https://github.com/Ziadelshazly22/A.R.A.K/issues',
+            'About': "A.R.A.K - Academic Resilience & Authentication Kernel"
+        }
     )
-    if page == "Home":
+    
+    load_styles()
+    
+    # Enhanced sidebar with branding
+    with st.sidebar:
+        # Logo in sidebar
+        logo_path = os.path.join(ASSETS_DIR, "A_R_A_K_Logo.png")
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=150)
+        
+        st.markdown("""
+        <div style="text-align: center; margin: 1rem 0;">
+            <h3 class="brand-gradient-text">A.R.A.K</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Academic Proctoring System</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Enhanced navigation
+        st.markdown("### 📍 Navigation")
+        page = st.radio(
+            "",
+            ["🏠 Home", "🔴 Live Detection", "📹 Upload Video", "⚙️ Settings", "📊 Logs & Review", "ℹ️ About"],
+            label_visibility="collapsed"
+        )
+        
+        # Status indicator
+        st.markdown("---")
+        st.markdown("### 📡 System Status")
+        if st.session_state.get("running", False):
+            st.markdown("🟢 **ACTIVE** - Monitoring in progress")
+        else:
+            st.markdown("🔴 **STANDBY** - Ready to monitor")
+    
+    # Route to appropriate page
+    page_name = page.split(" ", 1)[1] if " " in page else page
+    
+    if "Home" in page:
         page_home()
-    elif page == "Live Detection":
+    elif "Live Detection" in page:
         page_live()
-    elif page == "Upload Video":
+    elif "Upload Video" in page:
         page_upload()
-    elif page == "Settings":
+    elif "Settings" in page:
         page_settings()
-    elif page == "Logs & Review":
+    elif "Logs" in page:
         page_logs()
     else:
         page_about()
+    
+    # Footer with branding
+    st.markdown("""
+    <div class="footer">
+        <p>© 2025 A.R.A.K - Academic Resilience & Authentication Kernel</p>
+        <p style="font-size: 0.8rem;">Built with ❤️ for Academic Integrity</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
