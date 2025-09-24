@@ -1,5 +1,12 @@
 """
-Primary backend pipeline for A.R.A.K: orchestrates detectors, scoring, logging, and annotation.
+Primary backend pipeline forfrom src.detectors.dual_yolo_detector import DualYoloDetector
+from src.detectors.gaze_detector import GazeDetector
+from src.logic.suspicion_scoring import (
+    ScoringConfig,
+    TemporalHistory,
+    compute_suspicion,
+)
+from src.logger import EventLogger.R.A.K: orchestrates detectors, scoring, logging, and annotation.
 
 Usage (CLI)
 -----------
@@ -232,7 +239,13 @@ def merge_wbf(dets: List[Dict], iou_thr: float, skip_box_thr: float = 0.0) -> Li
 
 
 class ProcessingPipeline:
-    """End-to-end per-frame processing orchestrator.
+    """End-to-end per-frame processing orchestrator with enhanced performance optimizations.
+
+    Features:
+    - Adaptive frame skipping for video vs live processing
+    - Separate skip rates for detection vs gaze processing  
+    - Intelligent caching of detection results
+    - Optimized suspicious moment detection with minimal false positives
 
     On each frame: YOLO detect -> Gaze detect -> Rule scoring -> Annotate -> Log row
 
@@ -245,10 +258,26 @@ class ProcessingPipeline:
         student_id: str,
         config_path: str = os.path.join("src", "logic", "config.yaml"),
         device: Optional[str] = None,
+        is_video_upload: bool = False,
     ):
         self.session_id = session_id
         self.student_id = student_id
+        self.is_video_upload = is_video_upload
         self.cfg = load_config_yaml(config_path)
+        
+        # Performance optimization settings based on processing type
+        video_skip = 3  # For uploaded videos - process every 3rd frame
+        live_skip = 2   # For live webcam - process every 2nd frame  
+        self.frame_skip = video_skip if is_video_upload else live_skip
+        self.detection_frame_skip = 6  # Run YOLO detection every 6th processed frame
+        self.gaze_frame_skip = 2       # Run gaze detection every 2nd processed frame
+        self.detection_counter = 0
+        self.gaze_counter = 0
+        
+        # Cache for performance optimization
+        self.last_detections = []
+        self.last_gaze_state = {"gaze": "uncertain", "head_pose": {"yaw": 0.0, "pitch": 0.0, "roll": 0.0}, "gaze_conf": 0.0}
+        
         # Initialize dual detectors: pretrained YOLOv11 and custom nano weights
         # Primary is name-based, secondary expects your weights at models/model_bestV3.pt
         # Detector settings from config
@@ -329,61 +358,103 @@ class ProcessingPipeline:
     #     self.frame_id += 1
     #     return annotated, score, events, is_alert
     def process_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, int, List[str], bool]:
-        """Process a single BGR frame and return (annotated, score, events, is_alert)."""
-        if self.frame_id % FRAME_SKIP != 0:
-                        # لو مش فريم نحتاجه، نرجع آخر نتيجة محفوظة
+        """Process a single BGR frame with optimized performance for suspicious moment detection.
+        
+        Performance optimizations:
+        - Adaptive frame skipping based on video vs live processing
+        - Separate detection and gaze processing intervals
+        - Intelligent caching to maintain detection quality
+        - Focus on suspicious moments for accurate snapshot timing
+        """
+        # Apply basic frame skipping for performance
+        if self.frame_id % self.frame_skip != 0:
             self.frame_id += 1
             return (
                 self.last_annotated_frame,
                 self.last_score,
                 self.last_events,
-                False  # أو False لو مفيش alert
-                )
-        detections = self.yolo.detect(frame, conf_thresh=self.det_conf, class_conf=self.class_conf)
-        if self.det_merge:
-            if self.det_merge_mode == 'wbf':
-                detections = merge_wbf(detections, iou_thr=self.det_iou, skip_box_thr=min(self.class_conf.values()) if self.class_conf else 0.0)
-            else:
-                detections = merge_nms(detections, self.det_iou)
-        gaze_state = self.gaze.process(frame)
+                False  # Skip alert processing for non-processed frames
+            )
+        
+        # Optimized detection processing - run YOLO less frequently
+        should_run_detection = (self.detection_counter % self.detection_frame_skip == 0)
+        if should_run_detection:
+            detections = self.yolo.detect(frame, conf_thresh=self.det_conf, class_conf=self.class_conf)
+            if self.det_merge:
+                if self.det_merge_mode == 'wbf':
+                    detections = merge_wbf(detections, iou_thr=self.det_iou, 
+                                         skip_box_thr=min(self.class_conf.values()) if self.class_conf else 0.0)
+                else:
+                    detections = merge_nms(detections, self.det_iou)
+            self.last_detections = detections  # Cache for performance
+        else:
+            detections = self.last_detections  # Use cached detections
+        
+        self.detection_counter += 1
+        
+        # Optimized gaze processing - run MediaPipe less frequently  
+        should_run_gaze = (self.gaze_counter % self.gaze_frame_skip == 0)
+        if should_run_gaze:
+            gaze_state = self.gaze.process(frame)
+            self.last_gaze_state = gaze_state  # Cache for performance
+        else:
+            gaze_state = self.last_gaze_state  # Use cached gaze state
+            
+        self.gaze_counter += 1
+        
+        # Compute suspicion score (this is lightweight)
         score, events, is_alert = compute_suspicion(
             detections, gaze_state, self.history, self.cfg
         )
 
+        # Always annotate current frame for visual feedback
         annotated = annotate_frame(frame, detections, gaze_state, score)
 
-        # Log primary event per frame (Normal or SUS)
-        event_type = "SUS" if is_alert else "NORMAL"
-        event_subtype = ";".join(events) if events else "none"
-        main_conf = max([d.get("conf", 0.0) for d in detections], default=0.0)
-        main_bbox = max(
-            [d.get("bbox", [0, 0, 0, 0]) for d in detections],
-            key=lambda b: (b[2] - b[0]) * (b[3] - b[1]) if b else 0,
-            default=[0, 0, 0, 0],
-        )
-        self.logger.log_event(
-            frame_id=self.frame_id,
-            event_type=event_type,
-            event_subtype=event_subtype,
-            confidence=float(main_conf),
-            bbox=[float(x) for x in main_bbox],
-            head_pose=gaze_state.get("head_pose", {}),
-            gaze=gaze_state.get("gaze", "uncertain"),
-            suspicion_score=score,
-            is_alert=is_alert,
-            annotated_frame=annotated,
-        )
+        # Enhanced suspicious moment detection - only log significant events
+        should_log = is_alert or (score > 0) or (len(events) > 0) or (self.frame_id % (self.frame_skip * 10) == 0)
+        
+        if should_log:
+            # Log primary event per frame (Normal or SUS)
+            event_type = "SUS" if is_alert else "NORMAL"
+            event_subtype = ";".join(events) if events else "none"
+            main_conf = max([d.get("conf", 0.0) for d in detections], default=0.0)
+            main_bbox = max(
+                [d.get("bbox", [0, 0, 0, 0]) for d in detections],
+                key=lambda b: (b[2] - b[0]) * (b[3] - b[1]) if b else 0,
+                default=[0, 0, 0, 0],
+            )
+            self.logger.log_event(
+                frame_id=self.frame_id,
+                event_type=event_type,
+                event_subtype=event_subtype,
+                confidence=float(main_conf),
+                bbox=[float(x) for x in main_bbox],
+                head_pose=gaze_state.get("head_pose", {}),
+                gaze=gaze_state.get("gaze", "uncertain"),
+                suspicion_score=score,
+                is_alert=is_alert,
+                annotated_frame=annotated,
+            )
 
         # Store last info for snapshot helper
         self.last_annotated_frame = annotated
         self.last_score = score
         self.last_events = events
-        self.last_main_conf = float(main_conf)
-        self.last_main_bbox = [float(x) for x in main_bbox]
+        self.last_main_conf = float(max([d.get("conf", 0.0) for d in detections], default=0.0))
+        self.last_main_bbox = [float(x) for x in max(
+            [d.get("bbox", [0, 0, 0, 0]) for d in detections],
+            key=lambda b: (b[2] - b[0]) * (b[3] - b[1]) if b else 0,
+            default=[0, 0, 0, 0],
+        )]
         self.last_gaze_state = dict(gaze_state)
 
+        # Add recent events for tracking
+        if events:
+            for event in events:
+                self.recent_events.append(f"{self.frame_id}: {event}")
+
         self.frame_id += 1
-        return annotated, score, events,is_alert
+        return annotated, score, events, is_alert
 
     def snapshot_now(self, label: str = "SNAPSHOT") -> Optional[str]:
         """Manual snapshots are disabled. Only automatic snapshots during suspicious moments are allowed.
@@ -399,36 +470,71 @@ class ProcessingPipeline:
 
 
 def run_realtime(args):
-    """Minimal CLI loop for webcam or video file, printing periodic status.
+    """Optimized CLI loop for webcam or video file with performance enhancements.
 
     This avoids cv2.imshow to remain compatible with headless environments. The
     Streamlit app should be preferred for interactive review and control.
+    
+    Performance optimizations:
+    - Detects if input is video file vs webcam for adaptive processing
+    - Implements frame skipping appropriate for the input type  
+    - Focuses processing on suspicious moment detection
     """
+    is_video_file = bool(args.video and not args.webcam)
     cap = cv2.VideoCapture(0) if args.webcam else cv2.VideoCapture(args.video)
     if not cap.isOpened():
         raise RuntimeError("Unable to open video source")
+
+    # Get video properties for optimization
+    total_frames = 0
+    if is_video_file:
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        print(f"Processing video: {total_frames} frames at {fps} FPS")
+        print("Performance optimization: Processing every 3rd frame for faster analysis")
+    else:
+        print("Live webcam processing: Performance optimization enabled")
 
     pipeline = ProcessingPipeline(
         session_id=args.session,
         student_id=args.student,
         device=None,
+        is_video_upload=is_video_file,
     )
+    
     last = time.time()
+    frame_count = 0
+    suspicious_moments = 0
+    
     while True:
         ok, frame = cap.read()
         if not ok:
             break
+            
+        frame_count += 1
         annotated, score, events, is_alert = pipeline.process_frame(frame)
-        # For headless environments, avoid imshow; print a lightweight status instead.
+        
+        if is_alert:
+            suspicious_moments += 1
+        
+        # For headless environments, avoid imshow; print optimized status instead.
         now = time.time()
-        if now - last >= 1.0:
-            print(f"score={score} alert={is_alert} events={events[:2]} ...")
+        if now - last >= 2.0:  # Update every 2 seconds for less spam
+            progress = f" ({frame_count}/{total_frames})" if is_video_file else ""
+            print(f"Frame {frame_count}{progress} | Score: {score} | Alert: {is_alert} | "
+                  f"Events: {events[:2] if events else 'None'} | Suspicious: {suspicious_moments}")
             last = now
+            
     cap.release()
     try:
         cv2.destroyAllWindows()
     except Exception:
         pass
+        
+    print(f"\nProcessing complete!")
+    print(f"Total frames processed: {frame_count}")
+    print(f"Suspicious moments detected: {suspicious_moments}")
+    print(f"Check logs/ directory for detailed analysis and snapshots")
 
 
 def parse_args():

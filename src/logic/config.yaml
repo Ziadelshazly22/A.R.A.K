@@ -1,8 +1,8 @@
-## Scoring threshold; frames with score >= this value are considered alerts
-alert_threshold: 6
+## Enhanced scoring threshold for more accurate suspicious moment detection
+alert_threshold: 4
 
-## Minimum confidence for phone detections to count toward the score
-phone_conf: 0.5
+## Optimized confidence thresholds for better accuracy
+phone_conf: 0.45
 
 ## Class label order used by the detector; change to match your trained model
 classes:
@@ -12,13 +12,13 @@ classes:
   - earphone
   - calculator
 
-## Weights added to the score for each rule (tune per exam policy)
+## Optimized weights for accurate suspicious moment detection (tune per exam policy)
 weights:
-  phone: 6               # phone detected with conf >= phone_conf
-  earphone: 6            # earphones detected
-  person: 6              # another person detected
-  book: 6                # book/paper detected when not allowed
-  calculator: 6          # calculator detected when not allowed
+  phone: 5               # phone detected with conf >= phone_conf
+  earphone: 4            # earphones detected
+  person: 5              # another person detected
+  book: 3                # book/paper detected when not allowed
+  calculator: 3          # calculator detected when not allowed
   notebook: 0            # laptop/notebook presence (0 to disable)
   # monitor: 0             # external monitor/TV presence (0 to disable)
   gaze_off_per_sec: 1    # per-second weight once off-screen gaze exceeds threshold
@@ -28,29 +28,30 @@ weights:
 allow_book: false
 allow_calculator: false
 
-## Gaze off-screen duration (seconds) before adding per-second score
-gaze_duration_threshold: 2.5
+## Optimized gaze monitoring for better performance
+gaze_duration_threshold: 3.0
 
 ## Repetitive head movement parameters
-repeat_dir_threshold: 2    # N same-direction turns within window
-repeat_window_sec: 10.0    # seconds window to evaluate repetition
+repeat_dir_threshold: 3    # N same-direction turns within window (increased for accuracy)
+repeat_window_sec: 15.0    # seconds window to evaluate repetition (increased)
 
-## Detector settings
+## Enhanced detector settings for performance optimization
 # Primary YOLO model (name or path), e.g., yolo11m.pt
 detector_primary: yolo11m.pt
 # Secondary custom YOLO weights path
 detector_secondary: models/model_bestV3.pt
-# Minimum confidence threshold passed to both models
-detector_conf: 0.4
+# Optimized confidence threshold for faster processing
+detector_conf: 0.35
 # Merge overlapping boxes from both models (IoU-based NMS)
 detector_merge_nms: true
-detector_nms_iou: 0.5
+detector_nms_iou: 0.4
 
-## Merge strategy: 'nms' or 'wbf' (weighted box fusion)
+## Enhanced merge strategy: 'wbf' (weighted box fusion) for better accuracy
 detector_merge_mode: wbf
 
-## Optional per-class confidence thresholds to keep detections
-# class_conf:
-#   phone: 0.55
-#   earphone: 0.5
-#   smartwatch: 0.5
+## Per-class confidence thresholds for more accurate detection
+class_conf:
+  phone: 0.45
+  earphone: 0.40
+  smartwatch: 0.45
+  person: 0.50

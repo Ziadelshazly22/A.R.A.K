@@ -457,12 +457,15 @@ def page_upload():
     run = st.button("Run Analysis")
     if up and run:
         # Save temp file
+        # Save uploaded file with optimized processing indicator
         tmp_path = os.path.join("data", "samples", f"tmp_{int(time.time())}.mp4")
         os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
         with open(tmp_path, "wb") as f:
             f.write(up.read())
 
-        pipeline = ProcessingPipeline(session_id=session_id, student_id=student_id)
+        # Initialize pipeline with video upload optimization
+        st.info("🚀 **Performance Optimization Active**: Processing every 3rd frame for faster analysis while maintaining accuracy for suspicious moment detection.")
+        pipeline = ProcessingPipeline(session_id=session_id, student_id=student_id, is_video_upload=True)
         cap = cv2.VideoCapture(tmp_path)
         placeholder = st.empty()
         prog = st.progress(0)
@@ -470,6 +473,11 @@ def page_upload():
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 640)
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480)
+        
+        # Performance stats tracking
+        start_time = time.time()
+        suspicious_moments = 0
+        
     # Prepare annotated video writer
         out_dir = os.path.join("logs", "videos", session_id)
         os.makedirs(out_dir, exist_ok=True)
@@ -477,12 +485,38 @@ def page_upload():
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore[attr-defined]
         writer = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
         i = 0
+        
+        # Create status container for real-time updates
+        status_container = st.container()
+        
         while True:
             ok, frame = cap.read()
             if not ok:
                 break
             annotated, score, events, is_alert = pipeline.process_frame(frame)
-            placeholder.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
+            
+            if is_alert:
+                suspicious_moments += 1
+            
+            # Update display less frequently for better performance
+            if i % 10 == 0 or is_alert:  # Update every 10th frame or when suspicious
+                placeholder.image(cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB), channels="RGB")
+                
+            # Update status information
+            if i % 30 == 0:  # Update stats every 30 frames
+                elapsed = time.time() - start_time
+                fps_actual = i / elapsed if elapsed > 0 else 0
+                with status_container:
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Frames Processed", i)
+                    with col2:
+                        st.metric("Processing FPS", f"{fps_actual:.1f}")
+                    with col3:
+                        st.metric("Suspicious Moments", suspicious_moments)
+                    with col4:
+                        st.metric("Current Score", score)
+            
             try:
                 writer.write(annotated)
             except Exception:

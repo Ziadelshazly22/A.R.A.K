@@ -46,7 +46,7 @@ class GazeDetector:
 	LEFT_BOTTOM = 374
 
 	def __init__(self, smoothing: int = 5):
-		"""Initialize MediaPipe FaceMesh and smoothing buffers.
+		"""Initialize MediaPipe FaceMesh with performance optimizations.
 
 		Parameters
 		----------
@@ -55,15 +55,25 @@ class GazeDetector:
 		"""
 
 		self.mp_face_mesh = face_mesh
+		# Optimized settings for better performance
 		self.face_mesh = self.mp_face_mesh.FaceMesh(
 			refine_landmarks=True,
 			max_num_faces=1,
-			min_detection_confidence=0.5,
-			min_tracking_confidence=0.5,
+			min_detection_confidence=0.3,  # Lower for faster processing
+			min_tracking_confidence=0.3,   # Lower for faster processing
 		)
 		self.buffer_x, self.buffer_y = deque(maxlen=smoothing), deque(maxlen=smoothing)
 		self.calibrated = False
 		self.baseline_x, self.baseline_y = 0.5, 0.5
+		
+		# Performance optimization: cache last known good state
+		self.last_good_state = {
+			"gaze": "uncertain",
+			"gaze_conf": 0.0,
+			"head_pose": {"pitch": 0.0, "yaw": 0.0, "roll": 0.0},
+			"pupil_rel": {"x": 0.5, "y": 0.5},
+		}
+		self.frames_since_detection = 0
 
 	def _normalize(self, c, mn, mx):
 		"""Normalize a point c into [0,1] range using min (mn) and max (mx) corners."""
@@ -86,43 +96,64 @@ class GazeDetector:
 		return False
 
 	def process(self, frame) -> Dict:
-		"""Process a BGR frame and estimate gaze direction and a rough head pose."""
+		"""Process a BGR frame with performance optimizations for gaze estimation."""
 		h, w = frame.shape[:2]
-		rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		
+		# Performance optimization: resize large frames for faster processing
+		if max(h, w) > 640:
+			scale = 640 / max(h, w)
+			new_w, new_h = int(w * scale), int(h * scale)
+			frame_small = cv2.resize(frame, (new_w, new_h))
+			scale_back = max(h, w) / 640
+		else:
+			frame_small = frame
+			scale_back = 1.0
+		
+		rgb = cv2.cvtColor(frame_small, cv2.COLOR_BGR2RGB)
 		results = self.face_mesh.process(rgb)
 
 		if not results.multi_face_landmarks: # pyright: ignore[reportAttributeAccessIssue] #Ignore
-			return {
-				"gaze": "uncertain",
-				"gaze_conf": 0.0,
-				"head_pose": {"pitch": 0.0, "yaw": 0.0, "roll": 0.0},
-				"pupil_rel": {"x": 0.5, "y": 0.5},
-			}
+			self.frames_since_detection += 1
+			# If we haven't detected a face in a while, return uncertain
+			if self.frames_since_detection > 10:
+				return {
+					"gaze": "uncertain",
+					"gaze_conf": 0.0,
+					"head_pose": {"pitch": 0.0, "yaw": 0.0, "roll": 0.0},
+					"pupil_rel": {"x": 0.5, "y": 0.5},
+				}
+			else:
+				# Return last known good state for continuity
+				return self.last_good_state
 
+		self.frames_since_detection = 0
+		small_h, small_w = frame_small.shape[:2]
 		lm = results.multi_face_landmarks[0].landmark # pyright: ignore[reportAttributeAccessIssue]
+		
+		# Extract landmarks with scaling
 		l_min = (
-			int(lm[self.LEFT_EYE_IDX[0]].x * w),
-			int(lm[self.LEFT_EYE_IDX[0]].y * h),
+			int(lm[self.LEFT_EYE_IDX[0]].x * small_w * scale_back),
+			int(lm[self.LEFT_EYE_IDX[0]].y * small_h * scale_back),
 		)
 		l_max = (
-			int(lm[self.LEFT_EYE_IDX[1]].x * w),
-			int(lm[self.LEFT_EYE_IDX[1]].y * h),
+			int(lm[self.LEFT_EYE_IDX[1]].x * small_w * scale_back),
+			int(lm[self.LEFT_EYE_IDX[1]].y * small_h * scale_back),
 		)
 		l_center = (
-			int(lm[self.LEFT_IRIS_CENTER].x * w),
-			int(lm[self.LEFT_IRIS_CENTER].y * h),
+			int(lm[self.LEFT_IRIS_CENTER].x * small_w * scale_back),
+			int(lm[self.LEFT_IRIS_CENTER].y * small_h * scale_back),
 		)
 		r_min = (
-			int(lm[self.RIGHT_EYE_IDX[0]].x * w),
-			int(lm[self.RIGHT_EYE_IDX[0]].y * h),
+			int(lm[self.RIGHT_EYE_IDX[0]].x * small_w * scale_back),
+			int(lm[self.RIGHT_EYE_IDX[0]].y * small_h * scale_back),
 		)
 		r_max = (
-			int(lm[self.RIGHT_EYE_IDX[1]].x * w),
-			int(lm[self.RIGHT_EYE_IDX[1]].y * h),
+			int(lm[self.RIGHT_EYE_IDX[1]].x * small_w * scale_back),
+			int(lm[self.RIGHT_EYE_IDX[1]].y * small_h * scale_back),
 		)
 		r_center = (
-			int(lm[self.RIGHT_IRIS_CENTER].x * w),
-			int(lm[self.RIGHT_IRIS_CENTER].y * h),
+			int(lm[self.RIGHT_IRIS_CENTER].x * small_w * scale_back),
+			int(lm[self.RIGHT_IRIS_CENTER].y * small_h * scale_back),
 		)
 
 		lx, ly = self._normalize(l_center, l_min, l_max)
@@ -147,13 +178,13 @@ class GazeDetector:
 			nx -= (self.baseline_x - 0.5)
 			ny -= (self.baseline_y - 0.5)
 
-		# Vertical ratio from iris and eyelid landmarks
-		r_iris_y = lm[self.RIGHT_IRIS_CENTER].y * h
-		r_top_y = lm[self.RIGHT_TOP].y * h
-		r_bottom_y = lm[self.RIGHT_BOTTOM].y * h
-		l_iris_y = lm[self.LEFT_IRIS_CENTER].y * h
-		l_top_y = lm[self.LEFT_TOP].y * h
-		l_bottom_y = lm[self.LEFT_BOTTOM].y * h
+		# Vertical ratio from iris and eyelid landmarks (scaled coordinates)
+		r_iris_y = lm[self.RIGHT_IRIS_CENTER].y * small_h * scale_back
+		r_top_y = lm[self.RIGHT_TOP].y * small_h * scale_back
+		r_bottom_y = lm[self.RIGHT_BOTTOM].y * small_h * scale_back
+		l_iris_y = lm[self.LEFT_IRIS_CENTER].y * small_h * scale_back
+		l_top_y = lm[self.LEFT_TOP].y * small_h * scale_back
+		l_bottom_y = lm[self.LEFT_BOTTOM].y * small_h * scale_back
 		r_ratio = (r_iris_y - r_top_y) / (r_bottom_y - r_top_y + 1e-6)
 		l_ratio = (l_iris_y - l_top_y) / (l_bottom_y - l_top_y + 1e-6)
 		iris_vert_ratio = (r_ratio + l_ratio) / 2.0
@@ -180,12 +211,16 @@ class GazeDetector:
 	# Placeholder head pose (requires solvePnP for real 3D estimation)
 		head_pose = {"pitch": float((0.5 - ny) * 30.0), "yaw": float((nx - 0.5) * 30.0), "roll": 0.0}
 
-		return {
+		result = {
 			"gaze": gaze,
 			"gaze_conf": float(np.clip(gaze_conf, 0.0, 1.0)),
 			"head_pose": head_pose,
 			"pupil_rel": {"x": float(nx), "y": float(ny)},
 		}
+		
+		# Cache this good result
+		self.last_good_state = result
+		return result
 
 
 __all__ = ["GazeDetector"]

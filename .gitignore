@@ -42,8 +42,15 @@ venv/
 *.wmv
 *.flv
 *.mkv
-
-
+# Audio files
+*.mp3   
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+#Testing files
+performance_test.py
 
 # OS generated files
 .DS_Store
