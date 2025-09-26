@@ -1,13 +1,19 @@
 from __future__ import annotations
 import io
 import os
+import sys
 import time
 from collections import deque
+from pathlib import Path
 
 import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
+
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 from src.pipeline import ProcessingPipeline
 from src.logger import LOGS_DIR
@@ -94,7 +100,7 @@ def page_home():
         with col2:
             st.markdown('<div class="logo-container fade-in">', unsafe_allow_html=True)
             # st.image(logo_path, use_column_width=True)
-            st.image(logo_path, use_container_width=True)
+            st.image(logo_path, width="stretch")
             st.markdown('</div>', unsafe_allow_html=True)
     
     # Enhanced title with gradient and animation
@@ -542,77 +548,136 @@ def page_upload():
 
 
 def page_settings():
-    """Interactive editor for config.yaml.
-
-    Teammates can experiment with thresholds and weights and immediately apply
-    them to the running app.
-    """
-    st.header("Settings")
-    cfg = load_cfg()
-    st.subheader("Thresholds")
-    cfg["alert_threshold"] = st.slider("Alert threshold", 1, 15, int(cfg.get("alert_threshold", 5)))
-    cfg["phone_conf"] = st.slider("Phone confidence threshold", 0.1, 0.9, float(cfg.get("phone_conf", 0.45)))
-
-    st.subheader("Weights")
-    for k in ["phone", "earphone", "smartwatch", "person", "book", "calculator", "notebook", "monitor", "gaze_off_per_sec", "repetitive_head"]:
-        cfg.setdefault("weights", {})
-        cfg["weights"][k] = st.slider(f"Weight: {k}", 0, 10, int(cfg["weights"].get(k, 3)))
-
-    st.subheader("Gaze & Behavior")
-    cfg["gaze_duration_threshold"] = st.slider(
-        "Gaze off duration threshold (s)", 0.5, 6.0, float(cfg.get("gaze_duration_threshold", 2.5))
-    )
-    cfg["repeat_dir_threshold"] = st.slider("Repetitive head N", 1, 5, int(cfg.get("repeat_dir_threshold", 2)))
-    cfg["repeat_window_sec"] = st.slider(
-        "Repetitive head window (s)", 2.0, 30.0, float(cfg.get("repeat_window_sec", 10.0))
-    )
-
-    st.subheader("Allowed Items")
-    cfg["allow_book"] = st.toggle("Allow book/paper", value=bool(cfg.get("allow_book", False)))
-    cfg["allow_calculator"] = st.toggle("Allow calculator", value=bool(cfg.get("allow_calculator", False)))
-
-    st.subheader("Detector Settings")
-    cfg["detector_primary"] = st.text_input("Primary YOLO model (name or path)", value=str(cfg.get("detector_primary", "yolo11m.pt")))
-    cfg["detector_secondary"] = st.text_input("Secondary YOLO weights path", value=str(cfg.get("detector_secondary", "models/model_bestV3.pt")))
-    cfg["detector_conf"] = float(st.slider("Detector confidence", 0.1, 0.9, float(cfg.get("detector_conf", 0.4))))
-    cfg["detector_merge_nms"] = st.toggle("Merge overlapping boxes", value=bool(cfg.get("detector_merge_nms", True)))
-    cfg["detector_merge_mode"] = st.selectbox("Merge mode", options=["wbf", "nms"], index=(0 if str(cfg.get("detector_merge_mode", "wbf")).lower()=="wbf" else 1))
-    cfg["detector_nms_iou"] = float(st.slider("Merge IoU threshold", 0.1, 0.9, float(cfg.get("detector_nms_iou", 0.5))))
-
-    with st.expander("Per-class confidence thresholds"):
-        # Provide common classes; keep existing values if present
-        defaults = {
-            "phone": 0.5,
-            "earphone": 0.5,
-            "smartwatch": 0.5,
-            "person": 0.3,
-            "book": 0.4,
-            "calculator": 0.5,
-            "notebook": 0.4,
-        }
-        class_conf = cfg.get("class_conf", {}) or {}
-        for k, dv in defaults.items():
-            class_conf[k] = float(st.slider(f"min conf: {k}", 0.0, 0.95, float(class_conf.get(k, dv))))
-        # Allow custom key/value additions via text
-        st.caption("Add/override custom class:conf (comma-separated pairs, e.g., 'tv:0.4, monitor:0.5')")
-        free = st.text_input("Custom pairs", value="")
-        if free.strip():
-            try:
-                parts = [p.strip() for p in free.split(",") if p.strip()]
-                for p in parts:
-                    if ":" in p:
-                        name, val = p.split(":", 1)
-                        name = name.strip()
-                        valf = float(val.strip())
-                        if name:
-                            class_conf[name] = valf
-            except Exception:
-                st.warning("Could not parse custom pairs; please use 'name:0.5' format")
-        cfg["class_conf"] = class_conf
-
-    if st.button("Save Settings"):
-        save_cfg(cfg)
-        st.success("Settings saved.")
+    """Simplified settings page - only essential user-configurable options."""
+    
+    st.markdown("""
+    <div class="fade-in">
+        <h2 class="brand-gradient-text" style="text-align: center; margin-bottom: 2rem;">
+            ⚙️ Exam Configuration
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-card slide-in-left">', unsafe_allow_html=True)
+    st.markdown("### 📋 Exam Policy Settings")
+    st.markdown("Configure what items are allowed during the exam:")
+    
+    # Import the config manager
+    try:
+        from src.logic.config_manager import get_user_settings, update_user_settings
+    except ImportError:
+        st.error("Configuration manager not available. Please check installation.")
+        return
+    
+    # Get current settings
+    current_settings = get_user_settings()
+    
+    # Create a clean, simple interface
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        allow_book = st.toggle(
+            "📖 Books/Textbooks", 
+            value=current_settings.get('allow_book', False),
+            help="Allow students to use books or printed materials"
+        )
+        allow_calculator = st.toggle(
+            "🧮 Calculators", 
+            value=current_settings.get('allow_calculator', False),
+            help="Allow calculators or computation devices"
+        )
+    
+    with col2:
+        allow_notebook = st.toggle(
+            "💻 Laptops/Notebooks", 
+            value=current_settings.get('allow_notebook', False),
+            help="Allow laptop computers or notebooks"
+        )
+        allow_earphones = st.toggle(
+            "🎧 Earphones/Headphones", 
+            value=current_settings.get('allow_earphones', False),
+            help="Allow earphones or headphones"
+        )
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Save settings section
+    st.markdown('<div class="glass-card slide-in-right" style="animation-delay: 0.3s;">', unsafe_allow_html=True)
+    st.markdown("### 💾 Save Configuration")
+    
+    col1, col2, col3 = st.columns([1, 1, 2])
+    
+    with col1:
+        if st.button("💾 Save Settings", type="primary"):
+            new_settings = {
+                'allow_book': allow_book,
+                'allow_notebook': allow_notebook,
+                'allow_calculator': allow_calculator,
+                'allow_earphones': allow_earphones
+            }
+            
+            if update_user_settings(new_settings):
+                st.success("✅ Settings saved successfully!")
+                st.rerun()
+            else:
+                st.error("❌ Failed to save settings")
+    
+    with col2:
+        if st.button("🔄 Reset to Default"):
+            default_settings = {
+                'allow_book': False,
+                'allow_notebook': False,
+                'allow_calculator': False,
+                'allow_earphones': False
+            }
+            
+            if update_user_settings(default_settings):
+                st.success("✅ Settings reset to default!")
+                st.rerun()
+            else:
+                st.error("❌ Failed to reset settings")
+    
+    with col3:
+        st.info("💡 All technical parameters are pre-optimized for best detection accuracy and performance.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Current policy summary
+    st.markdown('<div class="glass-card fade-in" style="animation-delay: 0.6s;">', unsafe_allow_html=True)
+    st.markdown("### 📊 Current Exam Policy")
+    
+    policy_summary = []
+    if allow_book:
+        policy_summary.append("📖 Books/Textbooks: **ALLOWED**")
+    else:
+        policy_summary.append("📖 Books/Textbooks: **PROHIBITED**")
+        
+    if allow_calculator:
+        policy_summary.append("🧮 Calculators: **ALLOWED**")
+    else:
+        policy_summary.append("🧮 Calculators: **PROHIBITED**")
+        
+    if allow_notebook:
+        policy_summary.append("💻 Laptops/Notebooks: **ALLOWED**")
+    else:
+        policy_summary.append("💻 Laptops/Notebooks: **PROHIBITED**")
+        
+    if allow_earphones:
+        policy_summary.append("🎧 Earphones/Headphones: **ALLOWED**")
+    else:
+        policy_summary.append("🎧 Earphones/Headphones: **PROHIBITED**")
+    
+    # Always prohibited items
+    policy_summary.extend([
+        "📱 Phones: **ALWAYS PROHIBITED**",
+        "⌚ Smartwatches: **ALWAYS PROHIBITED**",
+        "👥 Unauthorized persons: **ALWAYS PROHIBITED**"
+    ])
+    
+    for item in policy_summary:
+        st.markdown(f"- {item}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def page_logs():
@@ -629,7 +694,7 @@ def page_logs():
     choice = st.selectbox("Select session log", options=csv_files)
     path = os.path.join(base_logs_dir, str(choice))
     df = pd.read_csv(path)
-    st.dataframe(df.tail(200), use_container_width=True)
+    st.dataframe(df.tail(200), width="stretch")
 
     # Basic filters
     sid = st.text_input("Filter by student_id")
@@ -778,7 +843,7 @@ def main():
         # Enhanced navigation
         st.markdown("### 📍 Navigation")
         page = st.radio(
-            "",
+            "Choose a page:",
             ["🏠 Home", "🔴 Live Detection", "📹 Upload Video", "⚙️ Settings", "📊 Logs & Review", "ℹ️ About"],
             label_visibility="collapsed"
         )

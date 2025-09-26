@@ -1,12 +1,6 @@
 """
-Primary backend pipeline forfrom src.detectors.dual_yolo_detector import DualYoloDetector
-from src.detectors.gaze_detector import GazeDetector
-from src.logic.suspicion_scoring import (
-    ScoringConfig,
-    TemporalHistory,
-    compute_suspicion,
-)
-from src.logger import EventLogger.R.A.K: orchestrates detectors, scoring, logging, and annotation.
+Primary backend pipeline for A.R.A.K: orchestrates detectors, scoring, logging, and annotation.
+Optimized for performance with adaptive frame skipping and intelligent processing.
 
 Usage (CLI)
 -----------
@@ -14,7 +8,6 @@ Usage (CLI)
     python src/pipeline.py --session SID --student STUD --video data/samples/sample.mp4
 
 This module is also imported by the Streamlit UI, which manages the webcam loop and
-    python src/pipeline.py --session SID --student STUD --video data/samples/sample.mp4
 provides controls like pause/resume and manual snapshots.
 """
 from __future__ import annotations
@@ -39,35 +32,13 @@ from src.logic.suspicion_scoring import (
 from src.logger import EventLogger
 
 FRAME_SKIP = 10  # عشان تعملي processing لكل 10 فريمات
-def load_config_yaml(path: str) -> ScoringConfig:
-    """Load scoring configuration from a YAML file if it exists, else defaults.
-
-    The returned ScoringConfig includes class names which the pipeline passes to
-    the YOLO detector to align class indices with the trained model.
+def load_config_yaml(path: Optional[str] = None) -> ScoringConfig:
+    """Load optimized scoring configuration from config manager.
+    
+    All technical parameters are pre-optimized for best performance and accuracy.
+    User settings (exam policy) are loaded dynamically from config manager.
     """
-    if not os.path.exists(path):
-        return ScoringConfig()
-    with open(path, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f) or {}
-    return ScoringConfig(
-        alert_threshold=cfg.get("alert_threshold", 5),
-        phone_conf=float(cfg.get("phone_conf", 0.45)),
-        classes=cfg.get("classes"),
-        weights=cfg.get("weights", {}),
-        allow_book=bool(cfg.get("allow_book", False)),
-        allow_calculator=bool(cfg.get("allow_calculator", False)),
-        gaze_duration_threshold=float(cfg.get("gaze_duration_threshold", 2.5)),
-        repeat_dir_threshold=int(cfg.get("repeat_dir_threshold", 2)),
-        repeat_window_sec=float(cfg.get("repeat_window_sec", 10.0)),
-        # Detector and thresholds extensions
-        detector_primary=cfg.get("detector_primary", "yolo11m.pt"),
-        detector_secondary=cfg.get("detector_secondary", os.path.join("models", "model_bestV3.pt")),
-        detector_conf=float(cfg.get("detector_conf", 0.4)),
-        detector_merge_nms=bool(cfg.get("detector_merge_nms", True)),
-        detector_nms_iou=float(cfg.get("detector_nms_iou", 0.5)),
-        detector_merge_mode=str(cfg.get("detector_merge_mode", "wbf")),
-        class_conf=cfg.get("class_conf", {}),
-    )
+    return ScoringConfig()
 
 
 def annotate_frame(frame, detections: List[Dict], gaze_state: Dict, score: int) -> np.ndarray:

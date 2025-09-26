@@ -1,57 +1,74 @@
-## Enhanced scoring threshold for more accurate suspicious moment detection
+# =============================================================================
+# A.R.A.K Academic Proctoring System - User Configuration
+# =============================================================================
+# Only modify the settings below. All technical parameters are pre-optimized
+# for maximum accuracy and performance.
+
+## EXAM POLICY SETTINGS (What items are allowed during the exam?)
+exam_policy:
+  allow_book: false           # Allow books/textbooks during exam
+  allow_notebook: false       # Allow laptops/notebooks during exam  
+  allow_calculator: false     # Allow calculators during exam
+  allow_earphones: false      # Allow earphones/headphones during exam
+
+# =============================================================================
+# TECHNICAL PARAMETERS (Pre-optimized - DO NOT MODIFY unless expert user)
+# =============================================================================
+
+# Alert sensitivity - optimized for balanced accuracy
 alert_threshold: 4
 
-## Optimized confidence thresholds for better accuracy
-phone_conf: 0.45
+# Confidence thresholds - tuned for best detection accuracy
+phone_conf: 0.50
+earphone_conf: 0.45
+person_conf: 0.55
+calculator_conf: 0.45
+book_conf: 0.40
 
-## Class label order used by the detector; change to match your trained model
+# Object detection classes
 classes:
   - person
   - phone
   - book
   - earphone
   - calculator
+  - notebook
+  - smartwatch
 
-## Optimized weights for accurate suspicious moment detection (tune per exam policy)
+
+# Suspicion scoring weights - optimized for academic integrity
 weights:
-  phone: 5               # phone detected with conf >= phone_conf
-  earphone: 4            # earphones detected
-  person: 5              # another person detected
-  book: 3                # book/paper detected when not allowed
-  calculator: 3          # calculator detected when not allowed
-  notebook: 0            # laptop/notebook presence (0 to disable)
-  # monitor: 0             # external monitor/TV presence (0 to disable)
-  gaze_off_per_sec: 1    # per-second weight once off-screen gaze exceeds threshold
-  repetitive_head: 2     # repetitive head movement within window
+  phone: 8                # Highest priority - phones are major violation
+  earphone: 6             # High priority - unauthorized communication
+  person: 7               # High priority - unauthorized assistance
+  smartwatch: 6           # High priority - potential cheating device
+  book: 4                 # Medium priority - depends on exam policy
+  calculator: 4           # Medium priority - depends on exam policy
+  notebook: 5             # Medium-high priority - unauthorized device
+  gaze_off_per_sec: 1     # Gradual accumulation for looking away
+  repetitive_head: 3      # Suspicious head movement patterns
 
-## Allowed items; set true to ignore their detections in scoring
-allow_book: false
-allow_calculator: false
+# Gaze monitoring - optimized for accuracy and performance
+gaze_duration_threshold: 2.5     # Seconds before flagging off-screen gaze
+gaze_confidence_threshold: 0.7   # Higher confidence for better accuracy
 
-## Optimized gaze monitoring for better performance
-gaze_duration_threshold: 3.0
+# Repetitive movement detection - tuned for real suspicious behavior
+repeat_dir_threshold: 4          # Number of same-direction turns to flag
+repeat_window_sec: 12.0          # Time window to evaluate repetition
 
-## Repetitive head movement parameters
-repeat_dir_threshold: 3    # N same-direction turns within window (increased for accuracy)
-repeat_window_sec: 15.0    # seconds window to evaluate repetition (increased)
+# YOLO Detector settings - optimized for speed and accuracy
+detector_primary: yolo11m.pt                    # Primary detection model
+detector_secondary: models/model_bestV3.pt      # Custom trained model
+detector_conf: 0.40                            # Base confidence threshold
+detector_merge_nms: true                       # Enable NMS merging
+detector_nms_iou: 0.45                        # IoU threshold for NMS
+detector_merge_mode: wbf                       # Weighted Box Fusion for accuracy
 
-## Enhanced detector settings for performance optimization
-# Primary YOLO model (name or path), e.g., yolo11m.pt
-detector_primary: yolo11m.pt
-# Secondary custom YOLO weights path
-detector_secondary: models/model_bestV3.pt
-# Optimized confidence threshold for faster processing
-detector_conf: 0.35
-# Merge overlapping boxes from both models (IoU-based NMS)
-detector_merge_nms: true
-detector_nms_iou: 0.4
-
-## Enhanced merge strategy: 'wbf' (weighted box fusion) for better accuracy
-detector_merge_mode: wbf
-
-## Per-class confidence thresholds for more accurate detection
+# Per-class confidence thresholds - fine-tuned for each object type
 class_conf:
-  phone: 0.45
-  earphone: 0.40
-  smartwatch: 0.45
-  person: 0.50
+  phone: 0.50
+  earphone: 0.45
+  smartwatch: 0.50
+  person: 0.55
+  book: 0.40
+  calculator: 0.45

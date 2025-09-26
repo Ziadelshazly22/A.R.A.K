@@ -32,4 +32,10 @@ if (-not (Test-Path $venvPy)) {
 }
 
 Write-Host "Starting Streamlit app..." -ForegroundColor Green
-& "$venvPy" -m streamlit run "$appPath"
+# Change to project root directory before running Streamlit
+Push-Location $root
+try {
+    & "$venvPy" -m streamlit run "$appPath"
+} finally {
+    Pop-Location
+}
