@@ -100,3 +100,5 @@ MANIFEST
 *.jar
 *.war
 *.iml
+#logs
+logs/
