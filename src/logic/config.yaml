@@ -1,74 +1,46 @@
-# =============================================================================
-# A.R.A.K Academic Proctoring System - User Configuration
-# =============================================================================
-# Only modify the settings below. All technical parameters are pre-optimized
-# for maximum accuracy and performance.
-
-## EXAM POLICY SETTINGS (What items are allowed during the exam?)
-exam_policy:
-  allow_book: false           # Allow books/textbooks during exam
-  allow_notebook: false       # Allow laptops/notebooks during exam  
-  allow_calculator: false     # Allow calculators during exam
-  allow_earphones: false      # Allow earphones/headphones during exam
-
-# =============================================================================
-# TECHNICAL PARAMETERS (Pre-optimized - DO NOT MODIFY unless expert user)
-# =============================================================================
-
-# Alert sensitivity - optimized for balanced accuracy
 alert_threshold: 4
-
-# Confidence thresholds - tuned for best detection accuracy
-phone_conf: 0.50
-earphone_conf: 0.45
-person_conf: 0.55
+book_conf: 0.4
 calculator_conf: 0.45
-book_conf: 0.40
-
-# Object detection classes
-classes:
-  - person
-  - phone
-  - book
-  - earphone
-  - calculator
-  - notebook
-  - smartwatch
-
-
-# Suspicion scoring weights - optimized for academic integrity
-weights:
-  phone: 8                # Highest priority - phones are major violation
-  earphone: 6             # High priority - unauthorized communication
-  person: 7               # High priority - unauthorized assistance
-  smartwatch: 6           # High priority - potential cheating device
-  book: 4                 # Medium priority - depends on exam policy
-  calculator: 4           # Medium priority - depends on exam policy
-  notebook: 5             # Medium-high priority - unauthorized device
-  gaze_off_per_sec: 1     # Gradual accumulation for looking away
-  repetitive_head: 3      # Suspicious head movement patterns
-
-# Gaze monitoring - optimized for accuracy and performance
-gaze_duration_threshold: 2.5     # Seconds before flagging off-screen gaze
-gaze_confidence_threshold: 0.7   # Higher confidence for better accuracy
-
-# Repetitive movement detection - tuned for real suspicious behavior
-repeat_dir_threshold: 4          # Number of same-direction turns to flag
-repeat_window_sec: 12.0          # Time window to evaluate repetition
-
-# YOLO Detector settings - optimized for speed and accuracy
-detector_primary: yolo11m.pt                    # Primary detection model
-detector_secondary: models/model_bestV3.pt      # Custom trained model
-detector_conf: 0.40                            # Base confidence threshold
-detector_merge_nms: true                       # Enable NMS merging
-detector_nms_iou: 0.45                        # IoU threshold for NMS
-detector_merge_mode: wbf                       # Weighted Box Fusion for accuracy
-
-# Per-class confidence thresholds - fine-tuned for each object type
 class_conf:
-  phone: 0.50
-  earphone: 0.45
-  smartwatch: 0.50
-  person: 0.55
-  book: 0.40
+  book: 0.4
   calculator: 0.45
+  earphone: 0.45
+  person: 0.55
+  phone: 0.5
+  smartwatch: 0.5
+classes:
+- person
+- phone
+- book
+- earphone
+- calculator
+- notebook
+- smartwatch
+detector_conf: 0.4
+detector_merge_mode: wbf
+detector_merge_nms: true
+detector_nms_iou: 0.45
+detector_primary: yolo11m.pt
+detector_secondary: models/model_bestV3.pt
+earphone_conf: 0.45
+exam_policy:
+  allow_book: false
+  allow_calculator: false
+  allow_earphones: false
+  allow_notebook: false
+gaze_confidence_threshold: 0.7
+gaze_duration_threshold: 2.5
+person_conf: 0.55
+phone_conf: 0.5
+repeat_dir_threshold: 4
+repeat_window_sec: 12.0
+weights:
+  book: 4
+  calculator: 4
+  earphone: 6
+  gaze_off_per_sec: 1
+  notebook: 5
+  person: 7
+  phone: 8
+  repetitive_head: 3
+  smartwatch: 6

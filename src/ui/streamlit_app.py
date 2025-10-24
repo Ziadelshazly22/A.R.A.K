@@ -948,7 +948,7 @@ def page_logs():
                 summary = processor.create_summary_report(df)
                 
                 # Session overview metrics
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3 = st.columns(3)
                 
                 session_info = summary.get('session_info', {})
                 with col1:
@@ -957,8 +957,7 @@ def page_logs():
                     st.metric("👥 Students", session_info.get('unique_students', 0))
                 with col3:
                     st.metric("📸 Snapshots", session_info.get('has_snapshots', 0))
-                with col4:
-                    st.metric("⏱️ Duration", session_info.get('time_span', 'Unknown'))
+
                 
                 # Suspicion analysis
                 if 'suspicion_analysis' in summary:
@@ -1058,13 +1057,14 @@ def page_logs():
             # Color-code suspicion levels
             def highlight_suspicion(row):
                 if row['suspicion_level'] == 'Critical Risk':
-                    return ['background-color: #ffebee'] * len(row)
+                    return ['background-color: rgba(255, 0, 0, 0.1)'] * len(row)  # Light red
                 elif row['suspicion_level'] == 'High Risk':
-                    return ['background-color: #fff3e0'] * len(row)
+                    return ['background-color: rgba(255, 165, 0, 0.1)'] * len(row)  # Light orange
                 elif row['suspicion_level'] == 'Medium Risk':
-                    return ['background-color: #fffde7'] * len(row)
+                    return ['background-color: rgba(255, 255, 0, 0.1)'] * len(row)  # Light yellow
                 else:
                     return [''] * len(row)
+
             
             styled_df = display_df.style.apply(highlight_suspicion, axis=1)
             st.dataframe(styled_df, use_container_width=True, height=400)
